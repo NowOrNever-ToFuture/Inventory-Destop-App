@@ -7,6 +7,7 @@ export interface SalesOrderItemRequestDto {
 
 export interface SalesOrderRequestDto {
   code?: string
+  orderDate?: string
   items: SalesOrderItemRequestDto[]
 }
 

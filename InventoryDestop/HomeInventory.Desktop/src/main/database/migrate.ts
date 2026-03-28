@@ -1,6 +1,7 @@
 import type { Database } from 'better-sqlite3'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { normalizeSearchText } from '@shared/utils/text-normalize'
 
 const BASE_SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS brands (
@@ -30,6 +31,7 @@ CREATE TABLE IF NOT EXISTS products (
   model TEXT NOT NULL,
   model_normalized TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL,
+  name_normalized TEXT,
   unit TEXT,
   stock_quantity REAL NOT NULL DEFAULT 0,
   import_price REAL NOT NULL DEFAULT 0,
@@ -111,10 +113,23 @@ function ensureLegacySchemaCompatibility(db: Database): void {
   if (!hasColumn(db, 'products', 'model_normalized')) {
     db.exec('ALTER TABLE products ADD COLUMN model_normalized TEXT')
   }
+  if (!hasColumn(db, 'products', 'name_normalized')) {
+    db.exec('ALTER TABLE products ADD COLUMN name_normalized TEXT')
+  }
   db.exec(
     "UPDATE products SET model_normalized = lower(trim(model)) WHERE model_normalized IS NULL OR trim(model_normalized) = ''"
   )
+  const productRows = db
+    .prepare<[], { id: string; name: string }>('SELECT id, name FROM products')
+    .all()
+  const updateProductNameNormalized = db.prepare<[string, string], void>(
+    'UPDATE products SET name_normalized = ? WHERE id = ?'
+  )
+  for (const row of productRows) {
+    updateProductNameNormalized.run(normalizeSearchText(row.name), row.id)
+  }
   db.exec('CREATE INDEX IF NOT EXISTS idx_products_model_normalized ON products(model_normalized)')
+  db.exec('CREATE INDEX IF NOT EXISTS idx_products_name_normalized ON products(name_normalized)')
 }
 
 /**

@@ -1,34 +1,35 @@
-import { Outlet, NavLink } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Package, 
-  ArrowDownToLine, 
-  ArrowUpFromLine, 
-  Tags, 
-  Award, 
-  Truck, 
+import { Outlet, NavLink } from 'react-router-dom'
+import {
+  LayoutDashboard,
+  Package,
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  Tags,
+  Award,
+  Truck,
   BarChart3,
-  Search,
   Bell
-} from 'lucide-react';
-import { cn } from '@renderer/lib/utils';
+} from 'lucide-react'
+import { cn } from '@renderer/lib/utils'
 
 interface SidebarItemProps {
-  icon: React.ElementType;
-  label: string;
-  to: string;
+  icon: React.ElementType
+  label: string
+  to: string
 }
 
 const SidebarItem = ({ icon: Icon, label, to }: SidebarItemProps) => {
   return (
-    <NavLink 
+    <NavLink
       to={to}
-      className={({ isActive }) => cn(
-        "w-full flex items-center gap-3 px-4 py-2.5 rounded-md transition-colors text-sm font-medium",
-        isActive 
-          ? "bg-gray-100 text-gray-900" 
-          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-      )}
+      className={({ isActive }) =>
+        cn(
+          'w-full flex items-center gap-3 px-4 py-2.5 rounded-md transition-colors text-sm font-medium',
+          isActive
+            ? 'bg-gray-100 text-gray-900'
+            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+        )
+      }
     >
       {({ isActive }) => (
         <>
@@ -37,8 +38,8 @@ const SidebarItem = ({ icon: Icon, label, to }: SidebarItemProps) => {
         </>
       )}
     </NavLink>
-  );
-};
+  )
+}
 
 export function AppLayout() {
   return (
@@ -51,22 +52,30 @@ export function AppLayout() {
             HomeInventory
           </div>
         </div>
-        
+
         <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2 mt-4">Tổng quan</div>
+          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2 mt-4">
+            Tổng quan
+          </div>
           <SidebarItem icon={LayoutDashboard} label="Dashboard" to="/" />
-          
-          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2 mt-6">Quản lý kho</div>
+
+          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2 mt-6">
+            Quản lý kho
+          </div>
           <SidebarItem icon={Package} label="Sản phẩm" to="/products" />
           <SidebarItem icon={ArrowDownToLine} label="Nhập kho" to="/purchase-orders" />
           <SidebarItem icon={ArrowUpFromLine} label="Xuất kho" to="/sales-orders" />
-          
-          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2 mt-6">Danh mục</div>
+
+          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2 mt-6">
+            Danh mục
+          </div>
           <SidebarItem icon={Tags} label="Thiết lập Danh mục" to="/categories" />
           <SidebarItem icon={Award} label="Thiết lập Hãng" to="/brands" />
           <SidebarItem icon={Truck} label="Đại lý phân phối" to="/suppliers" />
 
-          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2 mt-6">Hệ thống</div>
+          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mb-2 mt-6">
+            Hệ thống
+          </div>
           <SidebarItem icon={BarChart3} label="Báo cáo" to="/reports" />
         </div>
 
@@ -87,16 +96,7 @@ export function AppLayout() {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 flex-shrink-0">
-          <div className="w-96">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-              <input 
-                type="text" 
-                placeholder="Tìm kiếm nhanh sản phẩm (Ctrl+K)..." 
-                className="w-full pl-9 pr-4 py-2 border border-transparent bg-gray-100 rounded-md text-sm focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-              />
-            </div>
-          </div>
+          <div />
           <div className="flex items-center gap-4">
             <button className="text-gray-400 hover:text-gray-600 relative">
               <Bell size={20} />
@@ -113,5 +113,5 @@ export function AppLayout() {
         </main>
       </div>
     </div>
-  );
+  )
 }

@@ -30,6 +30,13 @@ function mapItems(items: SalesOrderItemRow[]): SalesOrderItemResponseDto[] {
 export class SalesOrderService {
   constructor(private readonly db: Database) {}
 
+  private resolveOrderDate(orderDate?: string): string {
+    if (orderDate && /^\d{4}-\d{2}-\d{2}$/.test(orderDate)) {
+      return orderDate
+    }
+    return new Date().toISOString().slice(0, 10)
+  }
+
   private generateUniqueId(): string {
     let id = crypto.randomUUID()
     while (
@@ -76,7 +83,7 @@ export class SalesOrderService {
   async createAsync(request: SalesOrderRequestDto): Promise<SalesOrderResponseDto> {
     const id = this.generateUniqueId()
     const code = request.code?.trim() || `SO-${Date.now()}`
-    const orderDate = new Date().toISOString()
+    const orderDate = this.resolveOrderDate(request.orderDate)
 
     // Validate stock for all items first
     for (const item of request.items) {
@@ -132,6 +139,9 @@ export class SalesOrderService {
     }
 
     const code = request.code?.trim() || existing.code
+    const orderDate = request.orderDate
+      ? this.resolveOrderDate(request.orderDate)
+      : existing.order_date
 
     // Restore old stock
     const oldItems = this.getItems(id)
@@ -166,8 +176,11 @@ export class SalesOrderService {
 
     this.db.transaction(() => {
       this.db
-        .prepare<[string, string], void>('UPDATE sales_orders SET code = ? WHERE id = ?')
-        .run(code, id)
+        .prepare<
+          [string, string, string],
+          void
+        >('UPDATE sales_orders SET code = ?, order_date = ? WHERE id = ?')
+        .run(code, orderDate, id)
 
       const insertItem = this.db.prepare<[string, string, string, number], void>(
         `INSERT INTO sales_order_items (id, sales_order_id, product_id, quantity)

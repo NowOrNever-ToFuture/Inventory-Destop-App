@@ -6,12 +6,14 @@ import type {
   ProductResponseDto
 } from '@shared/types/dtos/product.dto'
 import { MAX_MONEY, MAX_MONEY_ERROR_MESSAGE } from '@shared/constants'
+import { normalizeSearchText } from '@shared/utils/text-normalize'
 
 interface ProductRow {
   id: string
   model: string
   model_normalized: string
   name: string
+  name_normalized: string
   unit: string | null
   stock_quantity: number
   import_price: number
@@ -59,7 +61,7 @@ export class ProductService {
   }
 
   private normalizeValue(value: string): string {
-    return value.trim().toLowerCase()
+    return normalizeSearchText(value)
   }
 
   private escapeLikePattern(value: string): string {
@@ -76,15 +78,15 @@ export class ProductService {
     if (normalized.length === 1) {
       const prefix = `${this.escapeLikePattern(normalized)}%`
       return {
-        clause: `(lower(name) LIKE ? ESCAPE '\\' OR model_normalized LIKE ? ESCAPE '\\')`,
+        clause: `(name_normalized LIKE ? ESCAPE '\\' OR model_normalized LIKE ? ESCAPE '\\')`,
         params: [prefix, prefix]
       }
     }
 
     const contains = `%${this.escapeLikePattern(normalized)}%`
     return {
-      clause: `(lower(name) LIKE ? ESCAPE '\\' OR lower(model) LIKE ? ESCAPE '\\' OR model_normalized LIKE ? ESCAPE '\\')`,
-      params: [contains, contains, contains]
+      clause: `(name_normalized LIKE ? ESCAPE '\\' OR model_normalized LIKE ? ESCAPE '\\')`,
+      params: [contains, contains]
     }
   }
 
@@ -162,7 +164,7 @@ export class ProductService {
       .prepare<
         [string, string],
         { id: string; model: string; name: string }
-      >('SELECT id, model, name FROM products WHERE model_normalized = ? OR lower(trim(name)) = ?')
+      >('SELECT id, model, name FROM products WHERE model_normalized = ? OR name_normalized = ?')
       .get(modelNormalized, nameNormalized)
 
     if (duplicate) {
@@ -173,20 +175,21 @@ export class ProductService {
 
     this.db
       .prepare<
-        [string, string, string, string, string | null, number, number, string, string],
+        [string, string, string, string, string, string | null, number, number, string, string],
         void
       >(
         `INSERT INTO products
-           (id, model, model_normalized, name, unit, stock_quantity, import_price, category_id, brand_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+           (id, model, model_normalized, name, name_normalized, unit, stock_quantity, import_price, category_id, brand_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .run(
         id,
         request.model.trim(),
         modelNormalized,
         request.name.trim(),
+        nameNormalized,
         request.unit ?? null,
-        request.stockQuantity,
+        request.stockQuantity ?? 0,
         importPrice,
         request.categoryId,
         request.brandId
@@ -212,7 +215,7 @@ export class ProductService {
       .prepare<
         [string, string, string],
         { id: string; model: string; name: string }
-      >('SELECT id, model, name FROM products WHERE (model_normalized = ? OR lower(trim(name)) = ?) AND id != ?')
+      >('SELECT id, model, name FROM products WHERE (model_normalized = ? OR name_normalized = ?) AND id != ?')
       .get(modelNormalized, nameNormalized, id)
 
     if (duplicate) {
@@ -221,20 +224,21 @@ export class ProductService {
 
     this.db
       .prepare<
-        [string, string, string, string | null, number, number, string, string, string],
+        [string, string, string, string, string | null, number, number, string, string, string],
         void
       >(
         `UPDATE products
-         SET model = ?, model_normalized = ?, name = ?, unit = ?,
-             stock_quantity = ?, import_price = ?, category_id = ?, brand_id = ?
+         SET model = ?, model_normalized = ?, name = ?, name_normalized = ?, unit = ?,
+              stock_quantity = ?, import_price = ?, category_id = ?, brand_id = ?
          WHERE id = ?`
       )
       .run(
         request.model.trim(),
         modelNormalized,
         request.name.trim(),
+        nameNormalized,
         request.unit ?? null,
-        request.stockQuantity,
+        request.stockQuantity ?? existing.stock_quantity,
         importPrice,
         request.categoryId,
         request.brandId,

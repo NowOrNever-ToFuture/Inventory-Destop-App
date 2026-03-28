@@ -1,7 +1,11 @@
 import type { IpcMain } from 'electron'
 import type { Database } from 'better-sqlite3'
 import { IpcChannels } from '@shared/contracts/ipc-channels'
-import type { ImportSummaryDto } from '@shared/types/dtos/report.dto'
+import type {
+  ImportSummaryDto,
+  TopImportedItemDto,
+  TopImportedItemsReportRequestDto
+} from '@shared/types/dtos/report.dto'
 import { ReportService } from '@main/services'
 
 export interface InventorySummary {
@@ -66,4 +70,11 @@ export function registerReportHandlers(ipcMain: IpcMain, db: Database): void {
   ipcMain.handle(IpcChannels.REPORT_AVAILABLE_YEARS, async (): Promise<number[]> => {
     return reportService.getAvailableYearsAsync()
   })
+
+  ipcMain.handle(
+    IpcChannels.REPORT_TOP_IMPORTED_ITEMS,
+    async (_event, request: TopImportedItemsReportRequestDto): Promise<TopImportedItemDto[]> => {
+      return reportService.getTopImportedItemsAsync(request)
+    }
+  )
 }

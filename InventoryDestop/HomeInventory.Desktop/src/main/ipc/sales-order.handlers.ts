@@ -27,4 +27,8 @@ export function registerSalesOrderHandlers(ipcMain: IpcMain, db: Database): void
       return salesOrderService.createAsync(data)
     }
   )
+
+  ipcMain.handle(IpcChannels.SALES_ORDER_DELETE, async (_event, id: string): Promise<boolean> => {
+    return salesOrderService.deleteAsync(id)
+  })
 }

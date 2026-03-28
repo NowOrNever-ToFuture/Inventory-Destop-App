@@ -34,18 +34,21 @@ export const IpcChannels = {
   PURCHASE_ORDER_GET_ALL: 'purchaseOrder:getAll',
   PURCHASE_ORDER_GET_BY_ID: 'purchaseOrder:getById',
   PURCHASE_ORDER_CREATE: 'purchaseOrder:create',
+  PURCHASE_ORDER_DELETE: 'purchaseOrder:delete',
 
   // Sales Order
   SALES_ORDER_GET_ALL: 'salesOrder:getAll',
   SALES_ORDER_GET_BY_ID: 'salesOrder:getById',
   SALES_ORDER_CREATE: 'salesOrder:create',
+  SALES_ORDER_DELETE: 'salesOrder:delete',
 
   // Report
   REPORT_INVENTORY_SUMMARY: 'report:inventorySummary',
   REPORT_SALES_SUMMARY: 'report:salesSummary',
   REPORT_IMPORT_SUMMARY: 'report:importSummary',
   REPORT_SALES_ORDER_MONTHLY: 'report:salesOrderMonthly',
-  REPORT_AVAILABLE_YEARS: 'report:availableYears'
+  REPORT_AVAILABLE_YEARS: 'report:availableYears',
+  REPORT_TOP_IMPORTED_ITEMS: 'report:topImportedItems'
 } as const
 
 export type IpcChannel = (typeof IpcChannels)[keyof typeof IpcChannels]

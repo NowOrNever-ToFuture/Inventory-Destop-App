@@ -1,7 +1,7 @@
-import * as React from "react"
-import { Search } from "lucide-react"
-import { cn } from "@renderer/lib/utils"
-import { Input } from "@renderer/components/ui/input"
+import * as React from 'react'
+import { Search } from 'lucide-react'
+import { cn } from '@renderer/lib/utils'
+import { Input } from '@renderer/components/ui/input'
 
 interface SuggestItem {
   id: string
@@ -24,38 +24,51 @@ export function SuggestInput({
   onValueChange,
   onSelect,
   loadOptions,
-  placeholder = "Nhập để tìm kiếm...",
+  placeholder = 'Nhập để tìm kiếm...',
   disabled,
-  className,
+  className
 }: SuggestInputProps) {
   const [options, setOptions] = React.useState<SuggestItem[]>([])
   const [isOpen, setIsOpen] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
-  
+
   const wrapperRef = React.useRef<HTMLDivElement>(null)
+  const loadOptionsRef = React.useRef(loadOptions)
+
+  React.useEffect(() => {
+    loadOptionsRef.current = loadOptions
+  }, [loadOptions])
 
   // Debounced search
   React.useEffect(() => {
-    if (!value || value.length < 2) {
+    if (!value || value.trim().length === 0) {
       setOptions([])
       return
     }
 
+    let cancelled = false
     const timer = setTimeout(async () => {
       setLoading(true)
       try {
-        const results = await loadOptions(value)
-        setOptions(results)
-        setIsOpen(true)
+        const results = await loadOptionsRef.current(value)
+        if (!cancelled) {
+          setOptions(results)
+          setIsOpen(true)
+        }
       } catch (e) {
-        console.error("SuggestInput loadOptions error:", e)
+        console.error('SuggestInput loadOptions error:', e)
       } finally {
-        setLoading(false)
+        if (!cancelled) {
+          setLoading(false)
+        }
       }
     }, 400)
 
-    return () => clearTimeout(timer)
-  }, [value, loadOptions])
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [value])
 
   // Click outside to close
   React.useEffect(() => {
@@ -64,12 +77,12 @@ export function SuggestInput({
         setIsOpen(false)
       }
     }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   return (
-    <div className={cn("relative w-full", className)} ref={wrapperRef}>
+    <div className={cn('relative w-full', className)} ref={wrapperRef}>
       <div className="relative">
         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
         <Input
@@ -80,7 +93,7 @@ export function SuggestInput({
             setIsOpen(true)
           }}
           onFocus={() => {
-            if (options.length > 0 && value.length >= 2) setIsOpen(true)
+            if (options.length > 0 && value.trim().length > 0) setIsOpen(true)
           }}
           disabled={disabled}
           placeholder={placeholder}
@@ -110,8 +123,8 @@ export function SuggestInput({
           ))}
         </div>
       )}
-      
-      {isOpen && !loading && value.length >= 2 && options.length === 0 && (
+
+      {isOpen && !loading && value.trim().length > 0 && options.length === 0 && (
         <div className="absolute z-50 mt-1 w-full rounded-md border border-gray-200 bg-white py-2 px-3 shadow-lg text-sm text-gray-500">
           Không tìm thấy kết quả. Bấm Enter để chọn model mới.
         </div>

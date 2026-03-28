@@ -11,8 +11,6 @@ import { reportAppError } from '@renderer/lib/app-error'
 import { formatCurrencyVnd } from '@renderer/lib/format'
 import type { ProductResponseDto, CategoryResponseDto, BrandResponseDto } from '@shared/types/dtos'
 
-const MAX_MONEY = 1_000_000_000_000_000
-
 interface ProductRow extends ProductResponseDto {
   categoryName: string
   brandName: string
@@ -34,11 +32,8 @@ export function Products() {
   const [newProduct, setNewProduct] = useState({
     model: '',
     name: '',
-    unit: '',
     categoryId: '',
-    brandId: '',
-    stockQuantity: '0',
-    importPrice: ''
+    brandId: ''
   })
   const pageSize = 10
 
@@ -164,7 +159,7 @@ export function Products() {
             p.stockQuantity > 10 ? 'success' : p.stockQuantity > 0 ? 'default' : 'destructive'
           }
         >
-          {p.stockQuantity} {p.unit ?? '-'}
+          {p.stockQuantity === 0 ? '0' : `${p.stockQuantity}${p.unit ? ` ${p.unit}` : ''}`}
         </Badge>
       )
     },
@@ -182,13 +177,7 @@ export function Products() {
   ]
 
   const canSaveProduct =
-    newProduct.model.trim() &&
-    newProduct.name.trim() &&
-    newProduct.categoryId &&
-    newProduct.brandId &&
-    Number(newProduct.stockQuantity) >= 0 &&
-    (newProduct.importPrice.trim() === '' ||
-      (Number(newProduct.importPrice) >= 0 && Number(newProduct.importPrice) <= MAX_MONEY))
+    newProduct.model.trim() && newProduct.name.trim() && newProduct.categoryId && newProduct.brandId
 
   const handleCreateProduct = async () => {
     if (!canSaveProduct) return
@@ -197,11 +186,10 @@ export function Products() {
       await window.api.product.create({
         model: newProduct.model.trim(),
         name: newProduct.name.trim(),
-        unit: newProduct.unit.trim() || undefined,
         categoryId: newProduct.categoryId,
         brandId: newProduct.brandId,
-        stockQuantity: Number(newProduct.stockQuantity) || 0,
-        importPrice: newProduct.importPrice.trim() === '' ? null : Number(newProduct.importPrice)
+        stockQuantity: 0,
+        importPrice: null
       })
 
       toast.success('Thêm sản phẩm thành công')
@@ -209,11 +197,8 @@ export function Products() {
       setNewProduct({
         model: '',
         name: '',
-        unit: '',
         categoryId: categories[0]?.id ?? '',
-        brandId: brands[0]?.id ?? '',
-        stockQuantity: '0',
-        importPrice: ''
+        brandId: brands[0]?.id ?? ''
       })
       await loadProducts()
     } catch (error) {
@@ -297,12 +282,6 @@ export function Products() {
             value={newProduct.name}
             onChange={(e) => setNewProduct((p) => ({ ...p, name: e.target.value }))}
           />
-          <Input
-            placeholder="Đơn vị (tùy chọn)"
-            value={newProduct.unit}
-            onChange={(e) => setNewProduct((p) => ({ ...p, unit: e.target.value }))}
-          />
-
           <div className="grid grid-cols-2 gap-3">
             <select
               value={newProduct.categoryId}
@@ -326,24 +305,6 @@ export function Products() {
                 </option>
               ))}
             </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Input
-              type="number"
-              min={0}
-              placeholder="Tồn kho ban đầu"
-              value={newProduct.stockQuantity}
-              onChange={(e) => setNewProduct((p) => ({ ...p, stockQuantity: e.target.value }))}
-            />
-            <Input
-              type="number"
-              min={0}
-              max={MAX_MONEY}
-              placeholder="Đơn giá nhập (VNĐ) - để trống nếu chưa có"
-              value={newProduct.importPrice}
-              onChange={(e) => setNewProduct((p) => ({ ...p, importPrice: e.target.value }))}
-            />
           </div>
         </div>
       </Modal>

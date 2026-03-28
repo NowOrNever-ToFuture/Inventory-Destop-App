@@ -1,10 +1,40 @@
 import type { Database } from 'better-sqlite3'
-import type { ImportSummaryDto } from '@shared/types/dtos/report.dto'
+import type {
+  ImportSummaryDto,
+  TopImportedItemDto,
+  TopImportedItemsReportRequestDto
+} from '@shared/types/dtos/report.dto'
 
 // ── ReportService ──────────────────────────────────────────────────────────
 
 export class ReportService {
   constructor(private readonly db: Database) {}
+
+  private normalizeTopImportedRequest(
+    request: TopImportedItemsReportRequestDto
+  ): TopImportedItemsReportRequestDto {
+    const safeYear = Number.isFinite(request.year)
+      ? Math.trunc(request.year)
+      : new Date().getFullYear()
+    const safeScope = request.scope === 'month' ? 'month' : 'year'
+
+    if (safeScope === 'month') {
+      const month = Number.isFinite(request.month)
+        ? Math.max(1, Math.min(12, Math.trunc(request.month as number)))
+        : 1
+
+      return {
+        scope: safeScope,
+        year: safeYear,
+        month
+      }
+    }
+
+    return {
+      scope: safeScope,
+      year: safeYear
+    }
+  }
 
   async getAvailableYearsAsync(): Promise<number[]> {
     const rows = this.db
@@ -71,5 +101,51 @@ export class ReportService {
       totalOrders: r.totalOrders,
       totalAmount: r.totalAmount
     }))
+  }
+
+  async getTopImportedItemsAsync(
+    request: TopImportedItemsReportRequestDto
+  ): Promise<TopImportedItemDto[]> {
+    const normalized = this.normalizeTopImportedRequest(request)
+    const whereClause =
+      normalized.scope === 'month'
+        ? `CAST(strftime('%Y', po.order_date) AS INTEGER) = ?
+           AND CAST(strftime('%m', po.order_date) AS INTEGER) = ?`
+        : `CAST(strftime('%Y', po.order_date) AS INTEGER) = ?`
+
+    const params: Array<number> =
+      normalized.scope === 'month'
+        ? [normalized.year, normalized.month as number]
+        : [normalized.year]
+
+    const rows = this.db
+      .prepare<Array<number>, { model: string; name: string; totalQuantity: number }>(
+        `SELECT
+           p.model AS model,
+           p.name AS name,
+           COALESCE(SUM(poi.quantity), 0) AS totalQuantity
+         FROM purchase_order_items poi
+         INNER JOIN purchase_orders po ON po.id = poi.purchase_order_id
+         INNER JOIN products p ON p.id = poi.product_id
+         WHERE ${whereClause}
+         GROUP BY poi.product_id, p.model, p.name
+         ORDER BY totalQuantity DESC
+         LIMIT 8`
+      )
+      .all(...params)
+
+    return rows
+      .map((row) => {
+        const model = row.model?.trim() ?? ''
+        const name = row.name?.trim() ?? ''
+        const label = model && name ? `${model} - ${name}` : model || name || 'Không xác định'
+        const quantity = Number.isFinite(row.totalQuantity) ? Math.max(0, row.totalQuantity) : 0
+
+        return {
+          label,
+          quantity
+        }
+      })
+      .filter((item) => item.quantity >= 0)
   }
 }

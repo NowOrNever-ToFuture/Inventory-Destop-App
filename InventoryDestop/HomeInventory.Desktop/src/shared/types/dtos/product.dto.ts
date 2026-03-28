@@ -4,7 +4,7 @@ export interface ProductRequestDto {
   unit?: string
   categoryId: string
   brandId: string
-  stockQuantity: number
+  stockQuantity?: number
   importPrice?: number | null
 }
 

@@ -1,6 +1,11 @@
 import { ipcRenderer } from 'electron'
 import { IpcChannels } from '@shared/contracts/ipc-channels'
-import type { ImportSummaryDto, AvailableYearsResponseDto } from '@shared/types/dtos/report.dto'
+import type {
+  ImportSummaryDto,
+  AvailableYearsResponseDto,
+  TopImportedItemDto,
+  TopImportedItemsReportRequestDto
+} from '@shared/types/dtos/report.dto'
 
 export interface InventorySummary {
   totalProducts: number
@@ -26,7 +31,10 @@ export const reportApi = {
     ipcRenderer.invoke(IpcChannels.REPORT_AVAILABLE_YEARS),
 
   getSalesOrderMonthly: (year: number): Promise<number[]> =>
-    ipcRenderer.invoke(IpcChannels.REPORT_SALES_ORDER_MONTHLY, year)
+    ipcRenderer.invoke(IpcChannels.REPORT_SALES_ORDER_MONTHLY, year),
+
+  getTopImportedItems: (request: TopImportedItemsReportRequestDto): Promise<TopImportedItemDto[]> =>
+    ipcRenderer.invoke(IpcChannels.REPORT_TOP_IMPORTED_ITEMS, request)
 }
 
 export type ReportApi = typeof reportApi

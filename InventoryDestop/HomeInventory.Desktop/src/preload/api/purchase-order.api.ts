@@ -13,7 +13,10 @@ export const purchaseOrderApi = {
     ipcRenderer.invoke(IpcChannels.PURCHASE_ORDER_GET_BY_ID, id),
 
   create: (data: PurchaseOrderRequestDto): Promise<PurchaseOrderResponseDto> =>
-    ipcRenderer.invoke(IpcChannels.PURCHASE_ORDER_CREATE, data)
+    ipcRenderer.invoke(IpcChannels.PURCHASE_ORDER_CREATE, data),
+
+  delete: (id: string): Promise<boolean> =>
+    ipcRenderer.invoke(IpcChannels.PURCHASE_ORDER_DELETE, id)
 }
 
 export type PurchaseOrderApi = typeof purchaseOrderApi

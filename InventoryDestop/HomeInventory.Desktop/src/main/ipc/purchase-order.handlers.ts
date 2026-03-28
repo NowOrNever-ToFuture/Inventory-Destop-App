@@ -30,4 +30,11 @@ export function registerPurchaseOrderHandlers(ipcMain: IpcMain, db: Database): v
       return purchaseOrderService.createAsync(data)
     }
   )
+
+  ipcMain.handle(
+    IpcChannels.PURCHASE_ORDER_DELETE,
+    async (_event, id: string): Promise<boolean> => {
+      return purchaseOrderService.deleteAsync(id)
+    }
+  )
 }
