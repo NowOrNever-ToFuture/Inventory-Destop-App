@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Plus, Edit, Trash2 } from 'lucide-react'
 import { DataTable, ColumnDef } from '@renderer/components/shared/DataTable'
 import { FilterBar } from '@renderer/components/shared/FilterBar'
@@ -27,7 +27,7 @@ export function Suppliers() {
   const [selectedItem, setSelectedItem] = useState<SupplierResponseDto | null>(null)
   const [form, setForm] = useState<FormState>({ name: '', phone: '' })
 
-  const loadSuppliers = async () => {
+  const loadSuppliers = useCallback(async () => {
     setLoading(true)
     try {
       const data = await window.api.supplier.getAll()
@@ -37,11 +37,11 @@ export function Suppliers() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [toast])
 
   useEffect(() => {
     void loadSuppliers()
-  }, [])
+  }, [loadSuppliers])
 
   const handleCreate = () => {
     setSelectedItem(null)
@@ -130,7 +130,7 @@ export function Suppliers() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+            className="size-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
             onClick={() => handleEdit(p)}
           >
             <Edit size={16} />
@@ -138,7 +138,7 @@ export function Suppliers() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+            className="size-8 text-red-500 hover:text-red-700 hover:bg-red-50"
             onClick={() => handleDelete(p)}
           >
             <Trash2 size={16} />
@@ -149,7 +149,7 @@ export function Suppliers() {
   ]
 
   return (
-    <div className="space-y-6 flex flex-col h-full">
+    <div className="flex flex-col gap-6 h-full">
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Đại lý phân phối</h1>
@@ -194,18 +194,20 @@ export function Suppliers() {
           </>
         }
       >
-        <div className="space-y-4 py-2">
+        <div className="flex flex-col gap-4 py-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tên đại lý (*)</label>
+            <label htmlFor="supplier-name" className="block text-sm font-medium text-gray-700 mb-1">Tên đại lý (*)</label>
             <Input
+              id="supplier-name"
               value={form.name}
               onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
               placeholder="VD: Công ty TNHH ABC..."
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
+            <label htmlFor="supplier-phone" className="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
             <Input
+              id="supplier-phone"
               value={form.phone}
               onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
               placeholder="VD: 0901234567"

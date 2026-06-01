@@ -81,7 +81,7 @@ export function AppLayout() {
 
         <div className="p-4 border-t border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm">
+            <div className="size-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm">
               AD
             </div>
             <div className="text-sm">
@@ -98,9 +98,9 @@ export function AppLayout() {
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 flex-shrink-0">
           <div />
           <div className="flex items-center gap-4">
-            <button className="text-gray-400 hover:text-gray-600 relative">
+            <button type="button" className="text-gray-400 hover:text-gray-600 relative" aria-label="Thông báo">
               <Bell size={20} />
-              <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+              <span className="absolute top-0 right-0 size-2 bg-red-500 rounded-full border border-white"></span>
             </button>
           </div>
         </header>

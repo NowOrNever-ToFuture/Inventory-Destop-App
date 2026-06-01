@@ -1,6 +1,8 @@
 import { useMemo } from 'react'
 import type { TopImportedItemDto, TopImportedItemsReportScope } from '@shared/types/dtos/report.dto'
 
+const viVnFormatter = new Intl.NumberFormat('vi-VN')
+
 interface TopImportedItemsPieChartProps {
   year: number
   availableYears: number[]
@@ -160,7 +162,7 @@ export function TopImportedItemsPieChart({
                     className="flex items-start gap-2 min-w-0"
                   >
                     <span
-                      className="w-3 h-3 rounded-sm mt-1 shrink-0"
+                      className="size-3 rounded-sm mt-1 shrink-0"
                       style={{ backgroundColor: slice.color }}
                     ></span>
                     <div className="min-w-0 text-sm text-gray-700">
@@ -168,7 +170,7 @@ export function TopImportedItemsPieChart({
                         {slice.label}
                       </div>
                       <div className="text-xs text-gray-500">
-                        {new Intl.NumberFormat('vi-VN').format(slice.quantity)} (
+                        {viVnFormatter.format(slice.quantity)} (
                         {slice.percent.toFixed(1)}%)
                       </div>
                     </div>

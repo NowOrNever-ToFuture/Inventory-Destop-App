@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Plus, MoreVertical } from 'lucide-react'
 import { DataTable, ColumnDef } from '@renderer/components/shared/DataTable'
 import { FilterBar } from '@renderer/components/shared/FilterBar'
@@ -19,7 +19,6 @@ interface ProductRow extends ProductResponseDto {
 export function Products() {
   const toast = useToast()
   const [search, setSearch] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
@@ -27,16 +26,14 @@ export function Products() {
   const [products, setProducts] = useState<ProductResponseDto[]>([])
   const [categories, setCategories] = useState<CategoryResponseDto[]>([])
   const [brands, setBrands] = useState<BrandResponseDto[]>([])
-
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [newProduct, setNewProduct] = useState({
-    model: '',
-    name: '',
-    categoryId: '',
-    brandId: ''
-  })
+  const [newProduct, setNewProduct] = useState({ model: '', name: '', categoryId: '', brandId: '' })
+
+  // Use ref for debounced search to avoid extra re-renders
+  const debouncedSearchRef = useRef('')
   const pageSize = 10
 
+  // Load lookup data once
   useEffect(() => {
     const loadLookups = async () => {
       try {
@@ -50,58 +47,50 @@ export function Products() {
         reportAppError(toast, 'SP-LOAD-02', 'Không tải được dữ liệu danh mục sản phẩm', error)
       }
     }
-
     void loadLookups()
   }, [toast])
 
+  const loadProducts = useCallback(
+    async (searchVal: string, catId: string, pg: number) => {
+      setLoading(true)
+      try {
+        const res = await window.api.product.getList({
+          search: searchVal || undefined,
+          categoryId: catId || undefined,
+          page: pg,
+          pageSize
+        })
+        setProducts(res.items)
+        setTotal(res.total)
+      } catch (error) {
+        setProducts([])
+        setTotal(0)
+        reportAppError(toast, 'SP-LOAD-01', 'Không tải được danh sách sản phẩm', error)
+      } finally {
+        setLoading(false)
+      }
+    },
+    [toast, pageSize]
+  )
+
+  // Debounce search + reset page + load in one effect
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setDebouncedSearch(search.trim())
-    }, 1000)
-
+      debouncedSearchRef.current = search.trim()
+      setPage(1)
+      void loadProducts(debouncedSearchRef.current, categoryId, 1)
+    }, 400)
     return () => window.clearTimeout(timer)
-  }, [search])
+  }, [search, categoryId, loadProducts])
 
+  // Load when page changes (not from search/category reset)
   useEffect(() => {
-    setPage(1)
-  }, [debouncedSearch, categoryId])
+    void loadProducts(debouncedSearchRef.current, categoryId, page)
+  }, [page, categoryId, loadProducts])
 
-  const loadProducts = async () => {
-    setLoading(true)
-    try {
-      const res = await window.api.product.getList({
-        search: debouncedSearch || undefined,
-        categoryId: categoryId || undefined,
-        page,
-        pageSize
-      })
-
-      setProducts(res.items)
-      setTotal(res.total)
-    } catch (error) {
-      setProducts([])
-      setTotal(0)
-      reportAppError(toast, 'SP-LOAD-01', 'Không tải được danh sách sản phẩm', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    void loadProducts()
-  }, [debouncedSearch, categoryId, page])
-
-  useEffect(() => {
-    if (!newProduct.categoryId && categories.length > 0) {
-      setNewProduct((prev) => ({ ...prev, categoryId: categories[0].id }))
-    }
-  }, [categories])
-
-  useEffect(() => {
-    if (!newProduct.brandId && brands.length > 0) {
-      setNewProduct((prev) => ({ ...prev, brandId: brands[0].id }))
-    }
-  }, [brands])
+  // Derive default categoryId/brandId for new product inline
+  const effectiveCategoryId = newProduct.categoryId || categories[0]?.id || ''
+  const effectiveBrandId = newProduct.brandId || brands[0]?.id || ''
 
   const categoryMap = useMemo(() => new Map(categories.map((c) => [c.id, c.name])), [categories])
   const brandMap = useMemo(() => new Map(brands.map((b) => [b.id, b.name])), [brands])
@@ -115,10 +104,6 @@ export function Products() {
       })),
     [products, categoryMap, brandMap]
   )
-
-  // Optional: Modal states
-  // const [isModalOpen, setIsModalOpen] = useState(false)
-  // const [editingProduct, setEditingProduct] = useState<Product | null>(null)
 
   const columns: ColumnDef<ProductRow>[] = [
     {
@@ -169,7 +154,7 @@ export function Products() {
       align: 'right',
       width: '50px',
       cell: () => (
-        <button className="text-gray-400 hover:text-gray-900 p-1">
+        <button type="button" className="text-gray-400 hover:text-gray-900 p-1" aria-label="Tùy chọn">
           <MoreVertical size={16} />
         </button>
       )
@@ -177,37 +162,30 @@ export function Products() {
   ]
 
   const canSaveProduct =
-    newProduct.model.trim() && newProduct.name.trim() && newProduct.categoryId && newProduct.brandId
+    newProduct.model.trim() && newProduct.name.trim() && effectiveCategoryId && effectiveBrandId
 
   const handleCreateProduct = async () => {
     if (!canSaveProduct) return
-
     try {
       await window.api.product.create({
         model: newProduct.model.trim(),
         name: newProduct.name.trim(),
-        categoryId: newProduct.categoryId,
-        brandId: newProduct.brandId,
+        categoryId: effectiveCategoryId,
+        brandId: effectiveBrandId,
         stockQuantity: 0,
         importPrice: null
       })
-
       toast.success('Thêm sản phẩm thành công')
       setIsModalOpen(false)
-      setNewProduct({
-        model: '',
-        name: '',
-        categoryId: categories[0]?.id ?? '',
-        brandId: brands[0]?.id ?? ''
-      })
-      await loadProducts()
+      setNewProduct({ model: '', name: '', categoryId: '', brandId: '' })
+      void loadProducts(debouncedSearchRef.current, categoryId, page)
     } catch (error) {
       reportAppError(toast, 'SP-CREATE-01', 'Không thêm được sản phẩm', error)
     }
   }
 
   return (
-    <div className="space-y-6 flex flex-col h-full">
+    <div className="flex flex-col gap-6 h-full">
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Sản phẩm</h1>
@@ -230,6 +208,7 @@ export function Products() {
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
               className="border border-gray-300 rounded-md text-sm px-3 py-2 bg-white text-gray-700 min-w-[200px]"
+              aria-label="Lọc theo danh mục"
             >
               <option value="">Tất cả danh mục</option>
               {categories.map((category) => (
@@ -271,7 +250,7 @@ export function Products() {
           </>
         }
       >
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           <Input
             placeholder="Model (VD: SS3100XH)"
             value={newProduct.model}
@@ -284,9 +263,10 @@ export function Products() {
           />
           <div className="grid grid-cols-2 gap-3">
             <select
-              value={newProduct.categoryId}
+              value={effectiveCategoryId}
               onChange={(e) => setNewProduct((p) => ({ ...p, categoryId: e.target.value }))}
               className="h-9 rounded-md border border-gray-300 px-3 text-sm"
+              aria-label="Danh mục"
             >
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -295,9 +275,10 @@ export function Products() {
               ))}
             </select>
             <select
-              value={newProduct.brandId}
+              value={effectiveBrandId}
               onChange={(e) => setNewProduct((p) => ({ ...p, brandId: e.target.value }))}
               className="h-9 rounded-md border border-gray-300 px-3 text-sm"
+              aria-label="Hãng"
             >
               {brands.map((b) => (
                 <option key={b.id} value={b.id}>

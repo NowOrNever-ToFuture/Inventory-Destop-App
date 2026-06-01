@@ -1,3 +1,5 @@
+const viVnFormatter = new Intl.NumberFormat('vi-VN')
+
 interface MonthlyImportBarChartProps {
   year: number
   availableYears: number[]
@@ -48,8 +50,8 @@ export function MonthlyImportBarChart({
           </div>
         )}
         <div className="absolute left-[-40px] top-0 bottom-0 flex flex-col justify-between text-xs text-gray-400 py-4 text-right px-1">
-          <span>{new Intl.NumberFormat('vi-VN').format(Math.round(maxValue))}</span>
-          <span>{new Intl.NumberFormat('vi-VN').format(Math.round(maxValue / 2))}</span>
+          <span>{viVnFormatter.format(Math.round(maxValue))}</span>
+          <span>{viVnFormatter.format(Math.round(maxValue / 2))}</span>
           <span>0</span>
         </div>
         {availableYears.length === 0 && (

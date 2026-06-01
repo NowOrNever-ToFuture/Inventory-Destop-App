@@ -9,10 +9,11 @@ import type {
   ProductRequestDto,
   ProductResponseDto
 } from '@shared/types/dtos/product.dto'
-import { ProductService } from '@main/services'
+import { ProductUseCases } from '@core/use-cases'
+import { SQLiteProductRepository } from '@infrastructure/repositories'
 
 export function registerProductHandlers(ipcMain: IpcMain, db: Database): void {
-  const productService = new ProductService(db)
+  const productService = new ProductUseCases(new SQLiteProductRepository(db))
 
   ipcMain.handle(
     IpcChannels.PRODUCT_GET_ALL,

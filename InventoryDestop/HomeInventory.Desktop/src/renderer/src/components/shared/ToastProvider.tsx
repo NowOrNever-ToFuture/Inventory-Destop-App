@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, use, useCallback, useMemo, useState } from 'react'
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react'
 
 type ToastType = 'success' | 'error' | 'info'
@@ -33,10 +33,10 @@ function ToastView({ item, onClose }: { item: ToastItem; onClose: () => void }) 
   return (
     <div className={`w-96 max-w-full rounded-lg border shadow-sm px-3 py-2 ${styles}`}>
       <div className="flex items-start gap-2">
-        <Icon className="h-4 w-4 mt-0.5 shrink-0" />
+        <Icon className="size-4 mt-0.5 shrink-0" />
         <p className="text-sm leading-5 flex-1">{item.message}</p>
-        <button onClick={onClose} className="opacity-70 hover:opacity-100 transition-opacity">
-          <X className="h-4 w-4" />
+        <button type="button" onClick={onClose} className="opacity-70 hover:opacity-100 transition-opacity">
+          <X className="size-4" />
         </button>
       </div>
     </div>
@@ -66,7 +66,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={api}>
       {children}
-
       <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2">
         {toasts.map((toast) => (
           <ToastView
@@ -81,7 +80,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useToast(): ToastApi {
-  const ctx = useContext(ToastContext)
+  const ctx = use(ToastContext)
   if (!ctx) {
     throw new Error('useToast phải được dùng trong ToastProvider')
   }

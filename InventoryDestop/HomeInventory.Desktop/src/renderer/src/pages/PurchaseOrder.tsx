@@ -49,13 +49,27 @@ const PURCHASE_DRAFT_LEGACY_STORAGE_KEY = 'homeinventory:draft:purchase-order'
 export function PurchaseOrder() {
   const navigate = useNavigate()
   const toast = useToast()
-  const [orderDate, setOrderDate] = useState(new Date().toISOString().slice(0, 10))
+  const [orderDate, setOrderDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [supplierQuery, setSupplierQuery] = useState('')
   const [supplierId, setSupplierId] = useState('')
   const [items, setItems] = useState<POItem[]>([])
   const [loadingSubmit, setLoadingSubmit] = useState(false)
   const [loadingLookups, setLoadingLookups] = useState(false)
-  const [savedDrafts, setSavedDrafts] = useState<PurchaseOrderDraft[]>([])
+  const [savedDrafts, setSavedDrafts] = useState<PurchaseOrderDraft[]>(() => {
+    try {
+      const raw =
+        localStorage.getItem(PURCHASE_DRAFT_STORAGE_KEY) ??
+        localStorage.getItem(PURCHASE_DRAFT_LEGACY_STORAGE_KEY)
+      if (!raw) return []
+      const parsed = JSON.parse(raw) as PurchaseOrderDraft | PurchaseOrderDraft[]
+      const drafts = Array.isArray(parsed) ? parsed : parsed ? [parsed] : []
+      const normalized = drafts.map((draft) => ({ ...draft, id: draft.id ?? crypto.randomUUID() }))
+      localStorage.setItem(PURCHASE_DRAFT_STORAGE_KEY, JSON.stringify(normalized))
+      return normalized
+    } catch {
+      return []
+    }
+  })
   const [orders, setOrders] = useState<PurchaseOrderResponseDto[]>([])
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrderResponseDto | null>(null)
   const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null)
@@ -88,9 +102,8 @@ export function PurchaseOrder() {
         setLoadingLookups(false)
       }
     }
-
     void loadLookups()
-  }, [])
+  }, [toast])
 
   const loadOrders = async () => {
     try {
@@ -103,39 +116,13 @@ export function PurchaseOrder() {
 
   useEffect(() => {
     void loadOrders()
-  }, [])
+  }, [toast])
 
-  useEffect(() => {
-    try {
-      const raw =
-        localStorage.getItem(PURCHASE_DRAFT_STORAGE_KEY) ??
-        localStorage.getItem(PURCHASE_DRAFT_LEGACY_STORAGE_KEY)
-      if (!raw) {
-        setSavedDrafts([])
-        return
-      }
-      const parsed = JSON.parse(raw) as PurchaseOrderDraft | PurchaseOrderDraft[]
-      const drafts = Array.isArray(parsed) ? parsed : parsed ? [parsed] : []
-      const normalizedDrafts = drafts.map((draft) => ({
-        ...draft,
-        id: draft.id ?? crypto.randomUUID()
-      }))
-      setSavedDrafts(normalizedDrafts)
-      localStorage.setItem(PURCHASE_DRAFT_STORAGE_KEY, JSON.stringify(normalizedDrafts))
-    } catch {
-      setSavedDrafts([])
-    }
-  }, [])
-
-  useEffect(() => {
-    const totalPages = Math.max(1, Math.ceil(savedDrafts.length / PAGE_SIZE))
-    if (draftPage > totalPages) setDraftPage(totalPages)
-  }, [savedDrafts.length, draftPage])
-
-  useEffect(() => {
-    const totalPages = Math.max(1, Math.ceil(orders.length / PAGE_SIZE))
-    if (orderPage > totalPages) setOrderPage(totalPages)
-  }, [orders.length, orderPage])
+  // Derived page bounds - clamp pages when data shrinks
+  const draftTotalPages = Math.max(1, Math.ceil(savedDrafts.length / PAGE_SIZE))
+  const effectiveDraftPage = Math.min(draftPage, draftTotalPages)
+  const orderTotalPages = Math.max(1, Math.ceil(orders.length / PAGE_SIZE))
+  const effectiveOrderPage = Math.min(orderPage, orderTotalPages)
 
   const categoryMap = useMemo(() => new Map(categories.map((c) => [c.id, c.name])), [categories])
   const brandMap = useMemo(() => new Map(brands.map((b) => [b.id, b.name])), [brands])
@@ -361,13 +348,13 @@ export function PurchaseOrder() {
   const productMap = useMemo(() => new Map(products.map((p) => [p.id, p])), [products])
 
   const pagedDrafts = useMemo(
-    () => savedDrafts.slice((draftPage - 1) * PAGE_SIZE, draftPage * PAGE_SIZE),
-    [savedDrafts, draftPage]
+    () => savedDrafts.slice((effectiveDraftPage - 1) * PAGE_SIZE, effectiveDraftPage * PAGE_SIZE),
+    [savedDrafts, effectiveDraftPage]
   )
 
   const pagedOrders = useMemo(
-    () => orders.slice((orderPage - 1) * PAGE_SIZE, orderPage * PAGE_SIZE),
-    [orders, orderPage]
+    () => orders.slice((effectiveOrderPage - 1) * PAGE_SIZE, effectiveOrderPage * PAGE_SIZE),
+    [orders, effectiveOrderPage]
   )
 
   const draftColumns: ColumnDef<PurchaseOrderDraft>[] = [
@@ -418,9 +405,6 @@ export function PurchaseOrder() {
           </Button>
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">Tạo Phiếu Nhập Kho</h1>
-            <p className="text-sm text-gray-500">
-              NK-{new Date().toISOString().slice(0, 10).replace(/-/g, '')}
-            </p>
           </div>
         </div>
         <div className="flex gap-3">
@@ -443,11 +427,11 @@ export function PurchaseOrder() {
             Thông tin chung
           </h3>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Ngày lập phiếu</label>
-            <Input type="date" value={orderDate} onChange={(e) => setOrderDate(e.target.value)} />
+            <label htmlFor="po-order-date" className="block text-sm font-medium text-gray-700 mb-1">Ngày lập phiếu</label>
+            <Input id="po-order-date" type="date" value={orderDate} onChange={(e) => setOrderDate(e.target.value)} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nhà cung cấp (*)</label>
+            <label htmlFor="po-supplier" className="block text-sm font-medium text-gray-700 mb-1">Nhà cung cấp (*)</label>
             <SuggestInput
               value={supplierQuery}
               onValueChange={setSupplierQuery}
@@ -467,16 +451,18 @@ export function PurchaseOrder() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="po-ref" className="block text-sm font-medium text-gray-700 mb-1">
               Số chứng từ (Hóa đơn)
             </label>
-            <Input type="text" placeholder="VD: HD-00123" />
+            <Input id="po-ref" type="text" placeholder="VD: HD-00123" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Ghi chú</label>
+            <label htmlFor="po-note" className="block text-sm font-medium text-gray-700 mb-1">Ghi chú</label>
             <textarea
+              id="po-note"
+              aria-label="Ghi chú"
               className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 min-h-[80px]"
-              placeholder="Ghi chú thêm..."
+              placeholder="Ghi chú thêm…"
               onChange={(e) => {
                 const next = limitWords(e.currentTarget.value)
                 if (next !== e.currentTarget.value) e.currentTarget.value = next
@@ -493,11 +479,11 @@ export function PurchaseOrder() {
             </Button>
           </div>
 
-          <div className="border border-gray-200 rounded-md overflow-visible relative z-0">
+          <div className={`border border-gray-200 rounded-md relative z-0 ${items.length > 6 ? 'max-h-[450px] overflow-y-auto' : 'overflow-hidden'}`}>
             <table className="w-full text-sm text-left">
-              <thead className="bg-gray-50 text-gray-500 font-medium">
+              <thead className="bg-gray-50 text-gray-500 font-medium sticky top-0 z-10">
                 <tr>
-                  <th className="px-4 py-3 min-w-[200px]">Model / Tên Sản phẩm</th>
+                  <th className="px-4 py-3">Model / Tên Sản phẩm</th>
                   <th className="px-4 py-3 w-20">ĐVT</th>
                   <th className="px-4 py-3 w-24 text-right">Số lượng</th>
                   <th className="px-4 py-3 w-32 text-right">Đơn giá (VNĐ)</th>
@@ -603,7 +589,7 @@ export function PurchaseOrder() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                            className="size-8 text-red-500 hover:text-red-700 hover:bg-red-50"
                             onClick={() => handleRemoveItem(item.id)}
                           >
                             <Trash2 size={14} />
@@ -628,7 +614,7 @@ export function PurchaseOrder() {
 
           {loadingLookups && (
             <div className="text-sm text-gray-500">
-              Đang tải dữ liệu danh mục/sản phẩm/nhà cung cấp...
+              Đang tải dữ liệu danh mục/sản phẩm/nhà cung cấp…
             </div>
           )}
         </div>
@@ -643,7 +629,7 @@ export function PurchaseOrder() {
           emptyStateTitle="Chưa có phiếu nháp"
           emptyStateDescription="Lưu nháp phiếu nhập để thấy dữ liệu ở đây."
           pagination={{
-            page: draftPage,
+            page: effectiveDraftPage,
             pageSize: PAGE_SIZE,
             total: savedDrafts.length,
             onPageChange: setDraftPage
@@ -660,7 +646,7 @@ export function PurchaseOrder() {
           emptyStateTitle="Chưa có phiếu nhập kho"
           emptyStateDescription="Hoàn tất phiếu nhập để thấy dữ liệu ở đây."
           pagination={{
-            page: orderPage,
+            page: effectiveOrderPage,
             pageSize: PAGE_SIZE,
             total: orders.length,
             onPageChange: setOrderPage

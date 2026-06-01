@@ -48,7 +48,15 @@ export const IpcChannels = {
   REPORT_IMPORT_SUMMARY: 'report:importSummary',
   REPORT_SALES_ORDER_MONTHLY: 'report:salesOrderMonthly',
   REPORT_AVAILABLE_YEARS: 'report:availableYears',
-  REPORT_TOP_IMPORTED_ITEMS: 'report:topImportedItems'
+  REPORT_TOP_IMPORTED_ITEMS: 'report:topImportedItems',
+  REPORT_TOP_SUPPLIERS: 'report:topSuppliers',
+
+  // Export
+  EXPORT_PURCHASE_REPORT: 'export:purchaseReport',
+  EXPORT_SALES_REPORT: 'export:salesReport',
+  EXPORT_INVENTORY_REPORT: 'export:inventoryReport',
+  EXPORT_YEARLY_REPORT: 'export:yearlyReport',
+  EXPORT_PURCHASE_BY_MONTH: 'export:purchaseByMonth'
 } as const
 
 export type IpcChannel = (typeof IpcChannels)[keyof typeof IpcChannels]

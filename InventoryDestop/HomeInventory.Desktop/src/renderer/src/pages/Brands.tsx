@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Plus, Edit, Trash2 } from 'lucide-react'
 import { DataTable, ColumnDef } from '@renderer/components/shared/DataTable'
 import { FilterBar } from '@renderer/components/shared/FilterBar'
@@ -22,7 +22,7 @@ export function Brands() {
   const [selectedItem, setSelectedItem] = useState<BrandResponseDto | null>(null)
   const [name, setName] = useState('')
 
-  const loadBrands = async () => {
+  const loadBrands = useCallback(async () => {
     setLoading(true)
     try {
       const data = await window.api.brand.getAll()
@@ -32,11 +32,11 @@ export function Brands() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [toast])
 
   useEffect(() => {
     void loadBrands()
-  }, [])
+  }, [loadBrands])
 
   const handleCreate = () => {
     setSelectedItem(null)
@@ -109,7 +109,7 @@ export function Brands() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+            className="size-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
             onClick={() => handleEdit(p)}
           >
             <Edit size={16} />
@@ -117,7 +117,7 @@ export function Brands() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+            className="size-8 text-red-500 hover:text-red-700 hover:bg-red-50"
             onClick={() => handleDelete(p)}
           >
             <Trash2 size={16} />
@@ -128,7 +128,7 @@ export function Brands() {
   ]
 
   return (
-    <div className="space-y-6 flex flex-col h-full">
+    <div className="flex flex-col gap-6 h-full">
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Hãng sản xuất</h1>
@@ -171,10 +171,11 @@ export function Brands() {
           </>
         }
       >
-        <div className="space-y-4 py-2">
+        <div className="flex flex-col gap-4 py-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tên hãng (*)</label>
+            <label htmlFor="brand-name" className="block text-sm font-medium text-gray-700 mb-1">Tên hãng (*)</label>
             <Input
+              id="brand-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="VD: Sony, Samsung..."

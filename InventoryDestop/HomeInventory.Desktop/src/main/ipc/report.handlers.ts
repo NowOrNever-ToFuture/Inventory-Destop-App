@@ -4,9 +4,12 @@ import { IpcChannels } from '@shared/contracts/ipc-channels'
 import type {
   ImportSummaryDto,
   TopImportedItemDto,
-  TopImportedItemsReportRequestDto
+  TopImportedItemsReportRequestDto,
+  TopSupplierReportRequestDto,
+  TopSupplierDto
 } from '@shared/types/dtos/report.dto'
-import { ReportService } from '@main/services'
+import { ReportUseCases } from '@core/use-cases'
+import { SQLiteReportRepository } from '@infrastructure/repositories'
 
 export interface InventorySummary {
   totalProducts: number
@@ -19,22 +22,14 @@ export interface SalesSummary {
 }
 
 export function registerReportHandlers(ipcMain: IpcMain, db: Database): void {
-  const reportService = new ReportService(db)
+  const reportService = new ReportUseCases(new SQLiteReportRepository(db))
 
   ipcMain.handle(IpcChannels.REPORT_INVENTORY_SUMMARY, async (): Promise<InventorySummary> => {
-    const row = db
-      .prepare(
-        'SELECT COUNT(*) as totalProducts, SUM(stock_quantity * import_price) as totalStockValue FROM products'
-      )
-      .get() as { totalProducts: number; totalStockValue: number }
-    return { totalProducts: row.totalProducts, totalStockValue: row.totalStockValue ?? 0 }
+    return reportService.getInventorySummaryAsync()
   })
 
   ipcMain.handle(IpcChannels.REPORT_SALES_SUMMARY, async (): Promise<SalesSummary> => {
-    const row = db.prepare('SELECT COUNT(*) as totalOrders FROM sales_orders').get() as {
-      totalOrders: number
-    }
-    return { totalOrders: row.totalOrders, totalRevenue: 0 }
+    return reportService.getSalesSummaryAsync()
   })
 
   ipcMain.handle(
@@ -47,23 +42,7 @@ export function registerReportHandlers(ipcMain: IpcMain, db: Database): void {
   ipcMain.handle(
     IpcChannels.REPORT_SALES_ORDER_MONTHLY,
     async (_event, year: number): Promise<number[]> => {
-      const rows = db
-        .prepare(
-          `SELECT CAST(strftime('%m', order_date) AS INTEGER) AS month, COUNT(*) AS total
-         FROM sales_orders
-         WHERE order_date LIKE ?
-         GROUP BY month
-         ORDER BY month`
-        )
-        .all(`${year}-%`) as Array<{ month: number; total: number }>
-
-      const result = Array.from({ length: 12 }, () => 0)
-      for (const row of rows) {
-        if (row.month >= 1 && row.month <= 12) {
-          result[row.month - 1] = row.total
-        }
-      }
-      return result
+      return reportService.getSalesOrderMonthlyAsync(year)
     }
   )
 
@@ -75,6 +54,13 @@ export function registerReportHandlers(ipcMain: IpcMain, db: Database): void {
     IpcChannels.REPORT_TOP_IMPORTED_ITEMS,
     async (_event, request: TopImportedItemsReportRequestDto): Promise<TopImportedItemDto[]> => {
       return reportService.getTopImportedItemsAsync(request)
+    }
+  )
+
+  ipcMain.handle(
+    IpcChannels.REPORT_TOP_SUPPLIERS,
+    async (_event, request: TopSupplierReportRequestDto): Promise<TopSupplierDto[]> => {
+      return reportService.getTopSuppliersAsync(request)
     }
   )
 }

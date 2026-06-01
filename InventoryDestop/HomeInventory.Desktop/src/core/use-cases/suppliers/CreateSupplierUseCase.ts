@@ -1,0 +1,8 @@
+import type { SupplierRepository } from '@core/repositories'
+import { RepositoryUseCase } from '../shared/RepositoryUseCase'
+
+export class CreateSupplierUseCase extends RepositoryUseCase<SupplierRepository> {
+  execute(...args: any[]): Promise<any> {
+    return this.repository.createAsync(...args)
+  }
+}

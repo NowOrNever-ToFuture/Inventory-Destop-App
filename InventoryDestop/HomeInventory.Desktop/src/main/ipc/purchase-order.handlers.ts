@@ -5,10 +5,11 @@ import type {
   PurchaseOrderRequestDto,
   PurchaseOrderResponseDto
 } from '@shared/types/dtos/purchase-order.dto'
-import { PurchaseOrderService } from '@main/services'
+import { PurchaseOrderUseCases } from '@core/use-cases'
+import { SQLitePurchaseOrderRepository } from '@infrastructure/repositories'
 
 export function registerPurchaseOrderHandlers(ipcMain: IpcMain, db: Database): void {
-  const purchaseOrderService = new PurchaseOrderService(db)
+  const purchaseOrderService = new PurchaseOrderUseCases(new SQLitePurchaseOrderRepository(db))
 
   ipcMain.handle(
     IpcChannels.PURCHASE_ORDER_GET_ALL,

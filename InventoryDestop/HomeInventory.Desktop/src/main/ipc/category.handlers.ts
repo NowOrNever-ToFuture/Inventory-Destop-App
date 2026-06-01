@@ -2,10 +2,11 @@ import type { IpcMain } from 'electron'
 import type { Database } from 'better-sqlite3'
 import { IpcChannels } from '@shared/contracts/ipc-channels'
 import type { CategoryRequestDto, CategoryResponseDto } from '@shared/types/dtos/category.dto'
-import { CategoryService } from '@main/services'
+import { CategoryUseCases } from '@core/use-cases'
+import { SQLiteCategoryRepository } from '@infrastructure/repositories'
 
 export function registerCategoryHandlers(ipcMain: IpcMain, db: Database): void {
-  const categoryService = new CategoryService(db)
+  const categoryService = new CategoryUseCases(new SQLiteCategoryRepository(db))
 
   ipcMain.handle(IpcChannels.CATEGORY_GET_ALL, async (): Promise<CategoryResponseDto[]> => {
     return categoryService.getAllAsync()

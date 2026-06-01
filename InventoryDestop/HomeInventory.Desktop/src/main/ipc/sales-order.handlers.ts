@@ -5,10 +5,11 @@ import type {
   SalesOrderRequestDto,
   SalesOrderResponseDto
 } from '@shared/types/dtos/sales-order.dto'
-import { SalesOrderService } from '@main/services'
+import { SalesOrderUseCases } from '@core/use-cases'
+import { SQLiteSalesOrderRepository } from '@infrastructure/repositories'
 
 export function registerSalesOrderHandlers(ipcMain: IpcMain, db: Database): void {
-  const salesOrderService = new SalesOrderService(db)
+  const salesOrderService = new SalesOrderUseCases(new SQLiteSalesOrderRepository(db))
 
   ipcMain.handle(IpcChannels.SALES_ORDER_GET_ALL, async (): Promise<SalesOrderResponseDto[]> => {
     return salesOrderService.getAllAsync()

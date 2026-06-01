@@ -24,6 +24,9 @@ const PAGE_SIZE = 10
 const SALES_DRAFT_STORAGE_KEY = 'homeinventory:drafts:sales-order'
 const SALES_DRAFT_LEGACY_STORAGE_KEY = 'homeinventory:draft:sales-order'
 
+// Hoist formatter to avoid rebuilding on every render
+const viVnFormatter = new Intl.NumberFormat('vi-VN')
+
 interface SOItem {
   id: string
   productId: string
@@ -44,12 +47,30 @@ interface SalesOrderDraft {
 export function SalesOrder() {
   const navigate = useNavigate()
   const toast = useToast()
-  const [orderDate, setOrderDate] = useState(new Date().toISOString().slice(0, 10))
+  const [orderDate, setOrderDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [items, setItems] = useState<SOItem[]>([])
   const [products, setProducts] = useState<ProductResponseDto[]>([])
   const [loadingSubmit, setLoadingSubmit] = useState(false)
   const [loadingProducts, setLoadingProducts] = useState(false)
-  const [savedDrafts, setSavedDrafts] = useState<SalesOrderDraft[]>([])
+  const [savedDrafts, setSavedDrafts] = useState<SalesOrderDraft[]>(() => {
+    try {
+      const raw =
+        localStorage.getItem(SALES_DRAFT_STORAGE_KEY) ??
+        localStorage.getItem(SALES_DRAFT_LEGACY_STORAGE_KEY)
+      if (!raw) return []
+      const parsed = JSON.parse(raw) as SalesOrderDraft | SalesOrderDraft[]
+      const drafts = Array.isArray(parsed) ? parsed : parsed ? [parsed] : []
+      const normalized = drafts.map((draft) => ({
+        ...draft,
+        id: draft.id ?? crypto.randomUUID(),
+        orderDate: draft.orderDate ?? new Date().toISOString().slice(0, 10)
+      }))
+      localStorage.setItem(SALES_DRAFT_STORAGE_KEY, JSON.stringify(normalized))
+      return normalized
+    } catch {
+      return []
+    }
+  })
   const [orders, setOrders] = useState<SalesOrderResponseDto[]>([])
   const [selectedOrder, setSelectedOrder] = useState<SalesOrderResponseDto | null>(null)
   const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null)
@@ -69,9 +90,8 @@ export function SalesOrder() {
         setLoadingProducts(false)
       }
     }
-
     void loadProducts()
-  }, [])
+  }, [toast])
 
   const loadOrders = async () => {
     try {
@@ -84,42 +104,13 @@ export function SalesOrder() {
 
   useEffect(() => {
     void loadOrders()
-  }, [])
+  }, [toast])
 
-  useEffect(() => {
-    try {
-      const raw =
-        localStorage.getItem(SALES_DRAFT_STORAGE_KEY) ??
-        localStorage.getItem(SALES_DRAFT_LEGACY_STORAGE_KEY)
-      if (!raw) {
-        setSavedDrafts([])
-        return
-      }
-
-      const parsed = JSON.parse(raw) as SalesOrderDraft | SalesOrderDraft[]
-      const drafts = Array.isArray(parsed) ? parsed : parsed ? [parsed] : []
-      const normalizedDrafts = drafts.map((draft) => ({
-        ...draft,
-        id: draft.id ?? crypto.randomUUID(),
-        orderDate: draft.orderDate ?? new Date().toISOString().slice(0, 10)
-      }))
-
-      setSavedDrafts(normalizedDrafts)
-      localStorage.setItem(SALES_DRAFT_STORAGE_KEY, JSON.stringify(normalizedDrafts))
-    } catch {
-      setSavedDrafts([])
-    }
-  }, [])
-
-  useEffect(() => {
-    const totalPages = Math.max(1, Math.ceil(savedDrafts.length / PAGE_SIZE))
-    if (draftPage > totalPages) setDraftPage(totalPages)
-  }, [savedDrafts.length, draftPage])
-
-  useEffect(() => {
-    const totalPages = Math.max(1, Math.ceil(orders.length / PAGE_SIZE))
-    if (orderPage > totalPages) setOrderPage(totalPages)
-  }, [orders.length, orderPage])
+  // Derived page bounds - clamp pages when data shrinks
+  const draftTotalPages = Math.max(1, Math.ceil(savedDrafts.length / PAGE_SIZE))
+  const effectiveDraftPage = Math.min(draftPage, draftTotalPages)
+  const orderTotalPages = Math.max(1, Math.ceil(orders.length / PAGE_SIZE))
+  const effectiveOrderPage = Math.min(orderPage, orderTotalPages)
 
   const productOptions = useMemo(
     () =>
@@ -325,13 +316,13 @@ export function SalesOrder() {
   }
 
   const pagedDrafts = useMemo(
-    () => savedDrafts.slice((draftPage - 1) * PAGE_SIZE, draftPage * PAGE_SIZE),
-    [savedDrafts, draftPage]
+    () => savedDrafts.slice((effectiveDraftPage - 1) * PAGE_SIZE, effectiveDraftPage * PAGE_SIZE),
+    [savedDrafts, effectiveDraftPage]
   )
 
   const pagedOrders = useMemo(
-    () => orders.slice((orderPage - 1) * PAGE_SIZE, orderPage * PAGE_SIZE),
-    [orders, orderPage]
+    () => orders.slice((effectiveOrderPage - 1) * PAGE_SIZE, effectiveOrderPage * PAGE_SIZE),
+    [orders, effectiveOrderPage]
   )
 
   const draftColumns: ColumnDef<SalesOrderDraft>[] = [
@@ -377,9 +368,6 @@ export function SalesOrder() {
           </Button>
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">Tạo Phiếu Xuất Kho</h1>
-            <p className="text-sm text-gray-500">
-              XK-{new Date().toISOString().slice(0, 10).replace(/-/g, '')}
-            </p>
           </div>
         </div>
         <div className="flex gap-3">
@@ -402,28 +390,30 @@ export function SalesOrder() {
             Thông tin xuất
           </h3>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Ngày lập phiếu</label>
-            <Input type="date" value={orderDate} onChange={(e) => setOrderDate(e.target.value)} />
+            <label htmlFor="so-order-date" className="block text-sm font-medium text-gray-700 mb-1">Ngày lập phiếu</label>
+            <Input id="so-order-date" type="date" value={orderDate} onChange={(e) => setOrderDate(e.target.value)} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Lý do xuất</label>
-            <select className="flex h-9 w-full rounded-md border border-gray-300 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500">
+            <label htmlFor="so-reason" className="block text-sm font-medium text-gray-700 mb-1">Lý do xuất</label>
+            <select id="so-reason" aria-label="Lý do xuất" className="flex h-9 w-full rounded-md border border-gray-300 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500">
               <option value="ban_hang">Xuất bán hàng</option>
               <option value="bao_hanh">Xuất bảo hành</option>
-              <option value="khac">Khác...</option>
+              <option value="khac">Khác…</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="so-ref" className="block text-sm font-medium text-gray-700 mb-1">
               Mã tham chiếu (Đơn hàng)
             </label>
-            <Input type="text" placeholder="VD: DH-908" />
+            <Input id="so-ref" type="text" placeholder="VD: DH-908" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Ghi chú</label>
+            <label htmlFor="so-note" className="block text-sm font-medium text-gray-700 mb-1">Ghi chú</label>
             <textarea
+              id="so-note"
+              aria-label="Ghi chú"
               className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 min-h-[80px]"
-              placeholder="Ghi chú thêm..."
+              placeholder="Ghi chú thêm…"
               onChange={(e) => {
                 const next = limitWords(e.currentTarget.value)
                 if (next !== e.currentTarget.value) e.currentTarget.value = next
@@ -440,11 +430,11 @@ export function SalesOrder() {
             </Button>
           </div>
 
-          <div className="border border-gray-200 rounded-md overflow-visible relative z-0">
+          <div className={`border border-gray-200 rounded-md relative z-0 ${items.length > 6 ? 'max-h-[450px] overflow-y-auto' : 'overflow-hidden'}`}>
             <table className="w-full text-sm text-left">
-              <thead className="bg-gray-50 text-gray-500 font-medium">
+              <thead className="bg-gray-50 text-gray-500 font-medium sticky top-0 z-10">
                 <tr>
-                  <th className="px-4 py-3 min-w-[200px]">Sản phẩm xuất</th>
+                  <th className="px-4 py-3">Sản phẩm xuất</th>
                   <th className="px-4 py-3 w-20">ĐVT</th>
                   <th className="px-4 py-3 w-32 text-center">Tồn khả dụng</th>
                   <th className="px-4 py-3 w-24 text-right">Sl Xuất</th>
@@ -537,7 +527,7 @@ export function SalesOrder() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                            className="size-8 text-red-500 hover:text-red-700 hover:bg-red-50"
                             onClick={() => handleRemoveItem(item.id)}
                           >
                             <Trash2 size={14} />
@@ -554,14 +544,14 @@ export function SalesOrder() {
               <div className="relative z-0 bg-gray-50 border-t border-gray-200 p-4 flex justify-end items-center gap-6">
                 <div className="text-gray-500">Tổng cộng:</div>
                 <div className="text-xl font-bold text-gray-900">
-                  {new Intl.NumberFormat('vi-VN').format(Math.round(totalValue))} VNĐ
+                  {viVnFormatter.format(Math.round(totalValue))} VNĐ
                 </div>
               </div>
             )}
           </div>
 
           {loadingProducts && (
-            <div className="text-sm text-gray-500">Đang tải dữ liệu sản phẩm...</div>
+            <div className="text-sm text-gray-500">Đang tải dữ liệu sản phẩm…</div>
           )}
         </div>
       </div>
@@ -575,7 +565,7 @@ export function SalesOrder() {
           emptyStateTitle="Chưa có phiếu nháp"
           emptyStateDescription="Lưu nháp phiếu xuất để thấy dữ liệu ở đây."
           pagination={{
-            page: draftPage,
+            page: effectiveDraftPage,
             pageSize: PAGE_SIZE,
             total: savedDrafts.length,
             onPageChange: setDraftPage
@@ -592,7 +582,7 @@ export function SalesOrder() {
           emptyStateTitle="Chưa có phiếu xuất kho"
           emptyStateDescription="Hoàn tất phiếu xuất để thấy dữ liệu ở đây."
           pagination={{
-            page: orderPage,
+            page: effectiveOrderPage,
             pageSize: PAGE_SIZE,
             total: orders.length,
             onPageChange: setOrderPage

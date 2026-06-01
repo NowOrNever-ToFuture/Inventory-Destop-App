@@ -2,10 +2,11 @@ import type { IpcMain } from 'electron'
 import type { Database } from 'better-sqlite3'
 import { IpcChannels } from '@shared/contracts/ipc-channels'
 import type { SupplierRequestDto, SupplierResponseDto } from '@shared/types/dtos/supplier.dto'
-import { SupplierService } from '@main/services'
+import { SupplierUseCases } from '@core/use-cases'
+import { SQLiteSupplierRepository } from '@infrastructure/repositories'
 
 export function registerSupplierHandlers(ipcMain: IpcMain, db: Database): void {
-  const supplierService = new SupplierService(db)
+  const supplierService = new SupplierUseCases(new SQLiteSupplierRepository(db))
 
   ipcMain.handle(IpcChannels.SUPPLIER_GET_ALL, async (): Promise<SupplierResponseDto[]> => {
     return supplierService.getAllAsync()

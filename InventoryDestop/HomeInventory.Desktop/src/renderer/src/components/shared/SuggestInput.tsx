@@ -19,6 +19,39 @@ interface SuggestInputProps {
   className?: string
 }
 
+interface State {
+  options: SuggestItem[]
+  isOpen: boolean
+  loading: boolean
+}
+
+type Action =
+  | { type: 'CLEAR' }
+  | { type: 'LOADING' }
+  | { type: 'LOADED'; options: SuggestItem[] }
+  | { type: 'CLOSE' }
+  | { type: 'OPEN' }
+  | { type: 'ERROR' }
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case 'CLEAR':
+      return { options: [], isOpen: false, loading: false }
+    case 'LOADING':
+      return { ...state, loading: true }
+    case 'LOADED':
+      return { options: action.options, isOpen: true, loading: false }
+    case 'CLOSE':
+      return { ...state, isOpen: false }
+    case 'OPEN':
+      return { ...state, isOpen: state.options.length > 0 }
+    case 'ERROR':
+      return { ...state, loading: false }
+    default:
+      return state
+  }
+}
+
 export function SuggestInput({
   value,
   onValueChange,
@@ -28,9 +61,11 @@ export function SuggestInput({
   disabled,
   className
 }: SuggestInputProps) {
-  const [options, setOptions] = React.useState<SuggestItem[]>([])
-  const [isOpen, setIsOpen] = React.useState(false)
-  const [loading, setLoading] = React.useState(false)
+  const [state, dispatch] = React.useReducer(reducer, {
+    options: [],
+    isOpen: false,
+    loading: false
+  })
 
   const wrapperRef = React.useRef<HTMLDivElement>(null)
   const loadOptionsRef = React.useRef(loadOptions)
@@ -39,28 +74,27 @@ export function SuggestInput({
     loadOptionsRef.current = loadOptions
   }, [loadOptions])
 
-  // Debounced search
+  // Debounced search - derive empty check inline, no state sync
+  const isEmpty = !value || value.trim().length === 0
+
   React.useEffect(() => {
-    if (!value || value.trim().length === 0) {
-      setOptions([])
+    if (isEmpty) {
+      dispatch({ type: 'CLEAR' })
       return
     }
 
     let cancelled = false
+    dispatch({ type: 'LOADING' })
+
     const timer = setTimeout(async () => {
-      setLoading(true)
       try {
         const results = await loadOptionsRef.current(value)
         if (!cancelled) {
-          setOptions(results)
-          setIsOpen(true)
+          dispatch({ type: 'LOADED', options: results })
         }
       } catch (e) {
         console.error('SuggestInput loadOptions error:', e)
-      } finally {
-        if (!cancelled) {
-          setLoading(false)
-        }
+        if (!cancelled) dispatch({ type: 'ERROR' })
       }
     }, 400)
 
@@ -68,13 +102,12 @@ export function SuggestInput({
       cancelled = true
       clearTimeout(timer)
     }
-  }, [value])
-
+  }, [value, isEmpty])
   // Click outside to close
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
+        dispatch({ type: 'CLOSE' })
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -84,35 +117,33 @@ export function SuggestInput({
   return (
     <div className={cn('relative w-full', className)} ref={wrapperRef}>
       <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 size-4" />
         <Input
           type="text"
           value={value}
           onChange={(e) => {
             onValueChange(e.target.value)
-            setIsOpen(true)
           }}
-          onFocus={() => {
-            if (options.length > 0 && value.trim().length > 0) setIsOpen(true)
-          }}
+          onFocus={() => dispatch({ type: 'OPEN' })}
           disabled={disabled}
           placeholder={placeholder}
           className="pl-9 bg-white"
         />
-        {loading && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 rounded-full border-2 border-gray-200 border-t-blue-500 animate-spin" />
+        {state.loading && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 size-4 rounded-full border-2 border-gray-200 border-t-blue-500 animate-spin" />
         )}
       </div>
 
-      {isOpen && options.length > 0 && (
+      {state.isOpen && state.options.length > 0 && (
         <div className="absolute z-50 mt-1 w-full rounded-md border border-gray-200 bg-white py-1 shadow-lg max-h-60 overflow-auto">
-          {options.map((item) => (
+          {state.options.map((item) => (
             <button
+              type="button"
               key={item.id}
               className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 focus:bg-gray-100 focus:outline-none flex flex-col"
               onClick={() => {
                 onSelect(item)
-                setIsOpen(false)
+                dispatch({ type: 'CLOSE' })
               }}
             >
               <span className="font-medium text-gray-900">{item.label}</span>
@@ -124,7 +155,7 @@ export function SuggestInput({
         </div>
       )}
 
-      {isOpen && !loading && value.trim().length > 0 && options.length === 0 && (
+      {state.isOpen && !state.loading && value.trim().length > 0 && state.options.length === 0 && (
         <div className="absolute z-50 mt-1 w-full rounded-md border border-gray-200 bg-white py-2 px-3 shadow-lg text-sm text-gray-500">
           Không tìm thấy kết quả. Bấm Enter để chọn model mới.
         </div>

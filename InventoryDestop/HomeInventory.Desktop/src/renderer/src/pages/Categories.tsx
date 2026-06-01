@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Plus, Edit, Trash2 } from 'lucide-react'
 import { DataTable, ColumnDef } from '@renderer/components/shared/DataTable'
 import { FilterBar } from '@renderer/components/shared/FilterBar'
@@ -26,7 +26,7 @@ export function Categories() {
   const [selectedItem, setSelectedItem] = useState<CategoryResponseDto | null>(null)
   const [form, setForm] = useState<FormState>({ name: '' })
 
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     setLoading(true)
     try {
       const data = await window.api.category.getAll()
@@ -36,11 +36,11 @@ export function Categories() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [toast])
 
   useEffect(() => {
     void loadCategories()
-  }, [])
+  }, [loadCategories])
 
   const handleCreate = () => {
     setSelectedItem(null)
@@ -113,7 +113,7 @@ export function Categories() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+            className="size-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
             onClick={() => handleEdit(p)}
           >
             <Edit size={16} />
@@ -121,7 +121,7 @@ export function Categories() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+            className="size-8 text-red-500 hover:text-red-700 hover:bg-red-50"
             onClick={() => handleDelete(p)}
           >
             <Trash2 size={16} />
@@ -132,7 +132,7 @@ export function Categories() {
   ]
 
   return (
-    <div className="space-y-6 flex flex-col h-full">
+    <div className="flex flex-col gap-6 h-full">
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Danh mục sản phẩm</h1>
@@ -175,10 +175,11 @@ export function Categories() {
           </>
         }
       >
-        <div className="space-y-4 py-2">
+        <div className="flex flex-col gap-4 py-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tên danh mục (*)</label>
+            <label htmlFor="category-name" className="block text-sm font-medium text-gray-700 mb-1">Tên danh mục (*)</label>
             <Input
+              id="category-name"
               value={form.name}
               onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
               placeholder="VD: Tivi, Tủ lạnh..."

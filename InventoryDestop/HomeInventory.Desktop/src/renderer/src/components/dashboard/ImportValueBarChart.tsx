@@ -1,3 +1,5 @@
+const viVnFormatter = new Intl.NumberFormat('vi-VN')
+
 interface ImportValueBarChartProps {
   year: number
   values: number[]
@@ -13,8 +15,8 @@ export function ImportValueBarChart({ year, values }: ImportValueBarChartProps) 
 
       <div className="flex-1 border-b border-l border-gray-200 flex items-end justify-between pl-10 pr-2 pb-0 relative overflow-x-auto">
         <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-[10px] sm:text-xs text-gray-400 py-4 text-right px-1 bg-white/80">
-          <span>{new Intl.NumberFormat('vi-VN').format(Math.round(maxVal))}</span>
-          <span>{new Intl.NumberFormat('vi-VN').format(Math.round(maxVal / 2))}</span>
+          <span>{viVnFormatter.format(Math.round(maxVal))}</span>
+          <span>{viVnFormatter.format(Math.round(maxVal / 2))}</span>
           <span>0</span>
         </div>
 

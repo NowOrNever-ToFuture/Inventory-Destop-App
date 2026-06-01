@@ -1,5 +1,17 @@
-export function formatCurrencyVnd(value: number): string {
-  return `${new Intl.NumberFormat('vi-VN').format(Math.round(value))} VNĐ`
+const vndFormatter = new Intl.NumberFormat('vi-VN')
+const vndFormatterDecimal = new Intl.NumberFormat('vi-VN', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+})
+
+export function formatCurrencyVnd(cents: number, showDecimal?: boolean): string {
+  const amount = cents / 100
+  const hasDecimal = showDecimal ?? (cents % 100 !== 0)
+  return `${(hasDecimal ? vndFormatterDecimal : vndFormatter).format(amount)} ₫`
+}
+
+export function formatRawCurrencyVnd(value: number): string {
+  return `${vndFormatter.format(Math.round(value))} ₫`
 }
 
 export function formatDateDdMmYyyy(value: string): string {

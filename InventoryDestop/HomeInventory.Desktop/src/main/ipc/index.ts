@@ -7,6 +7,7 @@ import { registerBrandHandlers } from './brand.handlers'
 import { registerSupplierHandlers } from './supplier.handlers'
 import { registerPurchaseOrderHandlers } from './purchase-order.handlers'
 import { registerSalesOrderHandlers } from './sales-order.handlers'
+import { registerExportHandlers } from './export.handlers'
 
 export function registerIpcHandlers(db: Database): void {
   registerProductHandlers(ipcMain, db)
@@ -16,4 +17,5 @@ export function registerIpcHandlers(db: Database): void {
   registerSupplierHandlers(ipcMain, db)
   registerPurchaseOrderHandlers(ipcMain, db)
   registerSalesOrderHandlers(ipcMain, db)
+  registerExportHandlers(ipcMain, db)
 }

@@ -2,10 +2,11 @@ import type { IpcMain } from 'electron'
 import type { Database } from 'better-sqlite3'
 import { IpcChannels } from '@shared/contracts/ipc-channels'
 import type { BrandRequestDto, BrandResponseDto } from '@shared/types/dtos/brand.dto'
-import { BrandService } from '@main/services'
+import { BrandUseCases } from '@core/use-cases'
+import { SQLiteBrandRepository } from '@infrastructure/repositories'
 
 export function registerBrandHandlers(ipcMain: IpcMain, db: Database): void {
-  const brandService = new BrandService(db)
+  const brandService = new BrandUseCases(new SQLiteBrandRepository(db))
 
   ipcMain.handle(IpcChannels.BRAND_GET_ALL, async (): Promise<BrandResponseDto[]> => {
     return brandService.getAllAsync()

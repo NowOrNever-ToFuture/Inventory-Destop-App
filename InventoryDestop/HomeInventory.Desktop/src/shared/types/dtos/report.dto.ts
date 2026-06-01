@@ -23,3 +23,14 @@ export interface TopImportedItemDto {
   label: string
   quantity: number
 }
+
+export interface TopSupplierReportRequestDto {
+  scope: 'month' | 'year'
+  year: number
+  month?: number
+}
+
+export interface TopSupplierDto {
+  supplierName: string
+  totalAmount: number
+}

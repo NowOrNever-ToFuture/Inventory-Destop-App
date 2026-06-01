@@ -6,6 +6,7 @@ import type { BrandApi } from './api/brand.api'
 import type { SupplierApi } from './api/supplier.api'
 import type { PurchaseOrderApi } from './api/purchase-order.api'
 import type { SalesOrderApi } from './api/sales-order.api'
+import type { ExportApi } from './api/export.api'
 
 interface DesktopApi {
   product: ProductApi
@@ -15,6 +16,7 @@ interface DesktopApi {
   supplier: SupplierApi
   purchaseOrder: PurchaseOrderApi
   salesOrder: SalesOrderApi
+  export: ExportApi
 }
 
 declare global {
