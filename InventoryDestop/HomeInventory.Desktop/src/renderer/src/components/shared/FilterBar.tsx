@@ -1,5 +1,5 @@
-import * as React from "react"
-import { Search } from "lucide-react"
+import * as React from 'react'
+import { Search } from 'lucide-react'
 
 interface FilterBarProps {
   searchPlaceholder?: string
@@ -9,10 +9,10 @@ interface FilterBarProps {
 }
 
 export function FilterBar({
-  searchPlaceholder = "Tìm kiếm...",
+  searchPlaceholder = 'Tìm kiếm...',
   searchValue,
   onSearchChange,
-  actions,
+  actions
 }: FilterBarProps) {
   return (
     <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-white rounded-t-lg">
@@ -29,9 +29,7 @@ export function FilterBar({
           />
         </div>
       </div>
-      <div className="flex items-center gap-2 text-sm text-gray-500">
-        {actions}
-      </div>
+      <div className="flex items-center gap-2 text-sm text-gray-500">{actions}</div>
     </div>
   )
 }

@@ -14,6 +14,7 @@ interface PurchaseOrderRow {
   supplier_id: string
   order_date: string
   total_amount: number
+  attachment_path: string | null
 }
 
 interface PurchaseOrderItemRow {
@@ -57,6 +58,10 @@ export class SQLitePurchaseOrderRepository {
 
   private resolveOrderDate(orderDate?: string): string {
     if (orderDate && /^\d{4}-\d{2}-\d{2}$/.test(orderDate)) {
+      const today = new Date().toISOString().slice(0, 10)
+      if (orderDate > today) {
+        throw new Error('Ngày lập phiếu không thể là ngày trong tương lai.')
+      }
       return orderDate
     }
     return new Date().toISOString().slice(0, 10)
@@ -90,7 +95,8 @@ export class SQLitePurchaseOrderRepository {
       orderDate: row.order_date,
       supplierId: row.supplier_id,
       totalAmount: fromMoneyInt(row.total_amount),
-      items: mapItems(items)
+      items: mapItems(items),
+      ...(row.attachment_path ? { attachmentPath: row.attachment_path } : {})
     }
   }
 
@@ -158,11 +164,18 @@ export class SQLitePurchaseOrderRepository {
     this.db.transaction(() => {
       // Insert purchase order
       this.db
-        .prepare<[string, string, string, string, number], void>(
-          `INSERT INTO purchase_orders (id, code, supplier_id, order_date, total_amount)
-           VALUES (?, ?, ?, ?, ?)`
+        .prepare<[string, string, string, string, number, string | null], void>(
+          `INSERT INTO purchase_orders (id, code, supplier_id, order_date, total_amount, attachment_path)
+           VALUES (?, ?, ?, ?, ?, ?)`
         )
-        .run(id, code, request.supplierId, orderDate, totalAmount)
+        .run(
+          id,
+          code,
+          request.supplierId,
+          orderDate,
+          totalAmount,
+          request.attachmentSourcePath ?? null
+        )
 
       // Insert items + update product stock
       const insertItem = this.db.prepare<[string, string, string, number, number, number], void>(

@@ -226,6 +226,13 @@ export function SalesOrder() {
   const handleSubmit = async () => {
     if (!isFormValid) return
 
+    // Validate date - không cho phép ngày tương lai
+    const today = new Date().toISOString().slice(0, 10)
+    if (orderDate > today) {
+      toast.error('Ngày lập phiếu không thể là ngày trong tương lai.')
+      return
+    }
+
     const payloadItems: SalesOrderItemRequestDto[] = items.map((item) => ({
       productId: item.productId,
       quantity: item.quantity
@@ -298,6 +305,10 @@ export function SalesOrder() {
   ]
 
   const handleSaveDraft = () => {
+    if (items.length === 0) {
+      toast.error('Vui lòng thêm ít nhất một sản phẩm trước khi lưu nháp.')
+      return
+    }
     try {
       const draft = {
         id: crypto.randomUUID(),
@@ -390,12 +401,26 @@ export function SalesOrder() {
             Thông tin xuất
           </h3>
           <div>
-            <label htmlFor="so-order-date" className="block text-sm font-medium text-gray-700 mb-1">Ngày lập phiếu</label>
-            <Input id="so-order-date" type="date" value={orderDate} onChange={(e) => setOrderDate(e.target.value)} />
+            <label htmlFor="so-order-date" className="block text-sm font-medium text-gray-700 mb-1">
+              Ngày lập phiếu
+            </label>
+            <Input
+              id="so-order-date"
+              type="date"
+              max={new Date().toISOString().slice(0, 10)}
+              value={orderDate}
+              onChange={(e) => setOrderDate(e.target.value)}
+            />
           </div>
           <div>
-            <label htmlFor="so-reason" className="block text-sm font-medium text-gray-700 mb-1">Lý do xuất</label>
-            <select id="so-reason" aria-label="Lý do xuất" className="flex h-9 w-full rounded-md border border-gray-300 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500">
+            <label htmlFor="so-reason" className="block text-sm font-medium text-gray-700 mb-1">
+              Lý do xuất
+            </label>
+            <select
+              id="so-reason"
+              aria-label="Lý do xuất"
+              className="flex h-9 w-full rounded-md border border-gray-300 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
+            >
               <option value="ban_hang">Xuất bán hàng</option>
               <option value="bao_hanh">Xuất bảo hành</option>
               <option value="khac">Khác…</option>
@@ -408,7 +433,9 @@ export function SalesOrder() {
             <Input id="so-ref" type="text" placeholder="VD: DH-908" />
           </div>
           <div>
-            <label htmlFor="so-note" className="block text-sm font-medium text-gray-700 mb-1">Ghi chú</label>
+            <label htmlFor="so-note" className="block text-sm font-medium text-gray-700 mb-1">
+              Ghi chú
+            </label>
             <textarea
               id="so-note"
               aria-label="Ghi chú"
@@ -430,115 +457,119 @@ export function SalesOrder() {
             </Button>
           </div>
 
-          <div className={`border border-gray-200 rounded-md relative z-0 ${items.length > 6 ? 'max-h-[450px] overflow-y-auto' : 'overflow-hidden'}`}>
-            <table className="w-full text-sm text-left">
-              <thead className="bg-gray-50 text-gray-500 font-medium sticky top-0 z-10">
-                <tr>
-                  <th className="px-4 py-3">Sản phẩm xuất</th>
-                  <th className="px-4 py-3 w-20">ĐVT</th>
-                  <th className="px-4 py-3 w-32 text-center">Tồn khả dụng</th>
-                  <th className="px-4 py-3 w-24 text-right">Sl Xuất</th>
-                  <th className="px-4 py-3 w-12 text-center"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {items.length === 0 ? (
+          <div className="border border-gray-200 rounded-md overflow-hidden">
+            <div className={items.length > 6 ? 'max-h-[450px] overflow-y-auto' : ''}>
+              <table className="w-full text-sm text-left border-collapse">
+                <thead className="bg-gray-50 text-gray-500 font-medium sticky top-0 z-10">
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
-                      Chưa có sản phẩm nào. Nhấp "Thêm dòng" để bắt đầu.
-                    </td>
+                    <th className="px-4 py-3 min-w-[260px]">Sản phẩm xuất</th>
+                    <th className="px-4 py-3 w-20">ĐVT</th>
+                    <th className="px-4 py-3 w-32 text-center">Tồn khả dụng</th>
+                    <th className="px-4 py-3 w-24 text-right">Sl Xuất</th>
+                    <th className="px-4 py-3 w-12 text-center"></th>
                   </tr>
-                ) : (
-                  items.map((item) => {
-                    const overStock = item.quantity > item.availableStock && item.model !== ''
-                    const overMax = item.quantity > MAX_MONEY
-                    const error = overStock || overMax
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {items.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                        Chưa có sản phẩm nào. Nhấp "Thêm dòng" để bắt đầu.
+                      </td>
+                    </tr>
+                  ) : (
+                    items.map((item) => {
+                      const overStock = item.quantity > item.availableStock && item.model !== ''
+                      const overMax = item.quantity > MAX_MONEY
+                      const error = overStock || overMax
 
-                    return (
-                      <tr key={item.id} className={`bg-white ${error ? 'bg-red-50/50' : ''}`}>
-                        <td className="px-4 py-3">
-                          <SuggestInput
-                            value={item.model}
-                            onValueChange={(val) => handleModelInputChange(item.id, val)}
-                            placeholder="Gõ model..."
-                            loadOptions={async (q) => {
-                              const keyword = normalizeSearchText(q)
-                              return normalizedProductOptions.filter(
-                                (m) =>
-                                  m.searchLabel.includes(keyword) ||
-                                  m.searchName.includes(keyword) ||
-                                  m.searchDescription.includes(keyword)
-                              )
-                            }}
-                            onSelect={(selected) => handleModelSelect(item.id, selected)}
-                            className={error ? 'border-red-300' : ''}
-                          />
-                          {item.name && (
-                            <div className="text-xs text-gray-500 mt-1 pl-1 line-clamp-1">
-                              {item.name}
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-2 py-3 align-top">
-                          <Input
-                            value={item.model ? item.unit : ''}
-                            readOnly
-                            placeholder="-"
-                            className="px-2 text-center bg-gray-50 text-gray-600"
-                          />
-                        </td>
-                        <td className="px-2 py-3 align-top">
-                          <div className="h-9 flex items-center justify-center">
-                            {item.model ? (
-                              <Badge variant={item.availableStock > 0 ? 'default' : 'destructive'}>
-                                {item.availableStock}
-                              </Badge>
-                            ) : (
-                              <span className="text-gray-500">-</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-2 py-3">
-                          <div className="flex flex-col items-end gap-1 min-h-[56px]">
-                            <Input
-                              type="number"
-                              min={1}
-                              max={MAX_MONEY}
-                              inputMode="decimal"
-                              value={item.quantity}
-                              onChange={(e) =>
-                                handleUpdateItem(item.id, 'quantity', Number(e.target.value))
-                              }
-                              className={`px-2 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${error ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                      return (
+                        <tr key={item.id} className={`bg-white ${error ? 'bg-red-50/50' : ''}`}>
+                          <td className="px-4 py-3">
+                            <SuggestInput
+                              value={item.model}
+                              onValueChange={(val) => handleModelInputChange(item.id, val)}
+                              placeholder="Gõ model..."
+                              loadOptions={async (q) => {
+                                const keyword = normalizeSearchText(q)
+                                return normalizedProductOptions.filter(
+                                  (m) =>
+                                    m.searchLabel.includes(keyword) ||
+                                    m.searchName.includes(keyword) ||
+                                    m.searchDescription.includes(keyword)
+                                )
+                              }}
+                              onSelect={(selected) => handleModelSelect(item.id, selected)}
+                              className={error ? 'border-red-300' : ''}
                             />
-                            {overStock && (
-                              <div className="text-[10px] text-red-500 whitespace-nowrap leading-none">
-                                Vượt quá tồn kho
+                            {item.name && (
+                              <div className="text-xs text-gray-500 mt-1 pl-1 line-clamp-1">
+                                {item.name}
                               </div>
                             )}
-                            {overMax && (
-                              <div className="text-[10px] text-red-500 whitespace-nowrap leading-none">
-                                Số lượng vượt quá 1 triệu tỷ
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-2 py-3 text-center align-top">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => handleRemoveItem(item.id)}
-                          >
-                            <Trash2 size={14} />
-                          </Button>
-                        </td>
-                      </tr>
-                    )
-                  })
-                )}
-              </tbody>
-            </table>
+                          </td>
+                          <td className="px-2 py-3 align-top">
+                            <Input
+                              value={item.model ? item.unit : ''}
+                              readOnly
+                              placeholder="-"
+                              className="px-2 text-center bg-gray-50 text-gray-600"
+                            />
+                          </td>
+                          <td className="px-2 py-3 align-top">
+                            <div className="h-9 flex items-center justify-center">
+                              {item.model ? (
+                                <Badge
+                                  variant={item.availableStock > 0 ? 'default' : 'destructive'}
+                                >
+                                  {item.availableStock}
+                                </Badge>
+                              ) : (
+                                <span className="text-gray-500">-</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-2 py-3">
+                            <div className="flex flex-col items-end gap-1 min-h-[56px]">
+                              <Input
+                                type="number"
+                                min={1}
+                                max={MAX_MONEY}
+                                inputMode="decimal"
+                                value={item.quantity}
+                                onChange={(e) =>
+                                  handleUpdateItem(item.id, 'quantity', Number(e.target.value))
+                                }
+                                className={`px-2 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${error ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                              />
+                              {overStock && (
+                                <div className="text-[10px] text-red-500 whitespace-nowrap leading-none">
+                                  Vượt quá tồn kho
+                                </div>
+                              )}
+                              {overMax && (
+                                <div className="text-[10px] text-red-500 whitespace-nowrap leading-none">
+                                  Số lượng vượt quá 1 triệu tỷ
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-2 py-3 text-center align-top">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => handleRemoveItem(item.id)}
+                            >
+                              <Trash2 size={14} />
+                            </Button>
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
 
             {items.length > 0 && (
               <div className="relative z-0 bg-gray-50 border-t border-gray-200 p-4 flex justify-end items-center gap-6">

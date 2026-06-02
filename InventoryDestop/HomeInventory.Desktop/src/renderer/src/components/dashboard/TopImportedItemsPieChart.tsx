@@ -170,8 +170,7 @@ export function TopImportedItemsPieChart({
                         {slice.label}
                       </div>
                       <div className="text-xs text-gray-500">
-                        {viVnFormatter.format(slice.quantity)} (
-                        {slice.percent.toFixed(1)}%)
+                        {viVnFormatter.format(slice.quantity)} ({slice.percent.toFixed(1)}%)
                       </div>
                     </div>
                   </li>

@@ -58,6 +58,7 @@ core ← KHÔNG phụ thuộc bất kỳ layer nào khác
 ```
 
 **Quy tắc bắt buộc:**
+
 - `core/` KHÔNG được import từ `electron`, `better-sqlite3`, React
 - `core/` KHÔNG được import từ `main/`, `preload/`, `renderer/`, `infrastructure/`
 - `infrastructure/` implement interfaces định nghĩa trong `core/`
@@ -66,14 +67,14 @@ core ← KHÔNG phụ thuộc bất kỳ layer nào khác
 
 ## Path Aliases
 
-| Alias | Path |
-|---|---|
-| `@main/*` | `src/main/*` |
-| `@shared/*` | `src/shared/*` |
-| `@core/*` | `src/core/*` |
+| Alias               | Path                   |
+| ------------------- | ---------------------- |
+| `@main/*`           | `src/main/*`           |
+| `@shared/*`         | `src/shared/*`         |
+| `@core/*`           | `src/core/*`           |
 | `@infrastructure/*` | `src/infrastructure/*` |
-| `@renderer/*` | `src/renderer/src/*` |
-| `@preload/*` | `src/preload/*` |
+| `@renderer/*`       | `src/renderer/src/*`   |
+| `@preload/*`        | `src/preload/*`        |
 
 Aliases được cấu hình trong `electron.vite.config.ts` và `tsconfig.node.json` / `tsconfig.web.json`.
 

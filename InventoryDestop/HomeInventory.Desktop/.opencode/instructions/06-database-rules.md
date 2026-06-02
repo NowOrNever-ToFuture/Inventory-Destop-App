@@ -39,6 +39,7 @@ CREATE INDEX IF NOT EXISTS idx_my_table_name ON my_table(name_normalized);
 ### Base Schema
 
 `migrate.ts` có hardcoded base schema để tránh crash khi migrations không được copy vào packaged app. Khi thêm bảng mới, cần thêm vào cả:
+
 1. Migration SQL file
 2. `BASE_SCHEMA_SQL` trong `migrate.ts`
 
@@ -50,13 +51,14 @@ CREATE INDEX IF NOT EXISTS idx_my_table_name ON my_table(name_normalized);
 import { toMoneyInt, fromMoneyInt } from '@shared/utils/money'
 
 // Khi INSERT/UPDATE
-const priceToStore = toMoneyInt(displayPrice)  // 100.50 → 10050
+const priceToStore = toMoneyInt(displayPrice) // 100.50 → 10050
 
 // Khi SELECT
-const displayPrice = fromMoneyInt(storedValue)  // 10050 → 100.50
+const displayPrice = fromMoneyInt(storedValue) // 10050 → 100.50
 ```
 
 **Các cột tiền hiện tại:**
+
 - `products.import_price` - INTEGER
 - `purchase_order_items.unit_cost` - INTEGER
 - `purchase_order_items.line_total` - INTEGER
@@ -78,6 +80,7 @@ const rows = db.prepare('SELECT * FROM products WHERE name_normalized LIKE ?').a
 ```
 
 **Các cột normalized hiện tại:**
+
 - `brands.name_normalized`
 - `categories.name_normalized`
 - `suppliers.name_normalized`
@@ -93,7 +96,7 @@ interface ProductRow {
   id: string
   model: string
   model_normalized: string
-  import_price: number  // INTEGER cents
+  import_price: number // INTEGER cents
   category_id: string
 }
 ```
@@ -106,8 +109,8 @@ function toResponse(row: ProductRow): ProductResponseDto {
   return {
     id: row.id,
     model: row.model,
-    importPrice: fromMoneyInt(row.import_price),  // chia 100
-    categoryId: row.category_id,
+    importPrice: fromMoneyInt(row.import_price), // chia 100
+    categoryId: row.category_id
   }
 }
 ```
@@ -173,7 +176,7 @@ return rows.reduce<MyDto[]>((acc, row) => {
 }, [])
 
 // ❌ Double pass
-return rows.map(toDto).filter(item => item.quantity > 0)
+return rows.map(toDto).filter((item) => item.quantity > 0)
 ```
 
 ## Indexes

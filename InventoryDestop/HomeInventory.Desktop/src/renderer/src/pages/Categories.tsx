@@ -177,7 +177,9 @@ export function Categories() {
       >
         <div className="flex flex-col gap-4 py-2">
           <div>
-            <label htmlFor="category-name" className="block text-sm font-medium text-gray-700 mb-1">Tên danh mục (*)</label>
+            <label htmlFor="category-name" className="block text-sm font-medium text-gray-700 mb-1">
+              Tên danh mục (*)
+            </label>
             <Input
               id="category-name"
               value={form.name}

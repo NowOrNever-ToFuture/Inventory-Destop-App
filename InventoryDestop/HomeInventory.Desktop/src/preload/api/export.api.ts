@@ -16,6 +16,9 @@ export const exportApi = {
 
   exportPurchaseByMonth: (year: number, month: number): Promise<string | null> =>
     ipcRenderer.invoke(IpcChannels.EXPORT_PURCHASE_BY_MONTH, year, month),
+
+  exportSalesByMonth: (year: number, month: number): Promise<string | null> =>
+    ipcRenderer.invoke(IpcChannels.EXPORT_SALES_BY_MONTH, year, month)
 }
 
 export type ExportApi = typeof exportApi

@@ -15,6 +15,7 @@ export interface PurchaseOrderRequestDto {
   orderDate?: string
   supplierId: string
   items: PurchaseOrderItemRequestDto[]
+  attachmentSourcePath?: string
 }
 
 export interface PurchaseOrderItemResponseDto {
@@ -31,6 +32,7 @@ export interface PurchaseOrderResponseDto {
   supplierId: string
   totalAmount: number
   items: PurchaseOrderItemResponseDto[]
+  attachmentPath?: string
 }
 
 // ── PurchaseOrderItem (standalone) ────────────────────────────────────────

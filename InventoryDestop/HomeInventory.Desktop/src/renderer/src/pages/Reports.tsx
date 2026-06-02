@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Download } from 'lucide-react'
 import { Button } from '@renderer/components/ui/button'
 import { useToast } from '@renderer/components/shared/ToastProvider'
@@ -18,15 +18,14 @@ export function Reports() {
   const [salesMonthly, setSalesMonthly] = useState<number[]>(EMPTY_MONTHLY)
   const [loading, setLoading] = useState(false)
 
+  // Load available years on mount
   useEffect(() => {
     const loadAvailableYears = async () => {
       try {
         const years = await window.api.report.getAvailableYears()
         const normalized = years.toSorted((a, b) => b - a)
         const nextYear =
-          normalized.length > 0 && !normalized.includes(Number(year))
-            ? String(normalized[0])
-            : year
+          normalized.length > 0 && !normalized.includes(Number(year)) ? String(normalized[0]) : year
         setAvailableYears(normalized)
         setYear(nextYear)
       } catch (error) {
@@ -37,20 +36,15 @@ export function Reports() {
     void loadAvailableYears()
   }, [toast])
 
-  useEffect(() => {
-    if (availableYears.length === 0) {
-      setRows([])
-      setSalesMonthly(EMPTY_MONTHLY())
-      return
-    }
-
-    const load = async () => {
+  const loadReport = useCallback(
+    async (y: string) => {
+      if (!y) return
       setLoading(true)
       try {
-        const y = Number(year)
+        const yNum = Number(y)
         const [importRows, salesRows] = await Promise.all([
-          window.api.report.getImportSummary(y),
-          window.api.report.getSalesOrderMonthly(y)
+          window.api.report.getImportSummary(yNum),
+          window.api.report.getSalesOrderMonthly(yNum)
         ])
         setRows(importRows)
         setSalesMonthly(salesRows)
@@ -59,9 +53,18 @@ export function Reports() {
       } finally {
         setLoading(false)
       }
+    },
+    [toast]
+  )
+
+  useEffect(() => {
+    if (availableYears.length === 0) {
+      setRows([])
+      setSalesMonthly(EMPTY_MONTHLY())
+      return
     }
-    void load()
-  }, [year, availableYears, toast])
+    void loadReport(year)
+  }, [year, availableYears, loadReport])
 
   const byMonth = useMemo(() => {
     const map = new Map<number, ImportSummaryDto>()
@@ -69,9 +72,17 @@ export function Reports() {
     return map
   }, [rows])
 
+  const handleExport = (fn: () => Promise<string | null>, errCode: string, errMsg: string) => {
+    void fn()
+      .then((f) => {
+        if (f) toast.success('Đã xuất thành công')
+      })
+      .catch((e) => reportAppError(toast, errCode, errMsg, e))
+  }
+
   return (
     <div className="flex flex-col gap-6 h-full">
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-start flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Báo cáo Nhập Xuất</h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -79,33 +90,96 @@ export function Reports() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2 items-center">
-          <div className="flex items-center gap-1">
+          {/* Xuất theo tháng cụ thể */}
+          <div className="flex items-center gap-1 border border-gray-200 rounded-md px-2 py-1 bg-gray-50">
+            <span className="text-xs text-gray-500 mr-1">Tháng:</span>
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              className="border border-gray-300 rounded-md text-sm px-2 py-1.5 bg-white text-gray-700"
+              className="border-0 bg-transparent text-sm text-gray-700 focus:outline-none"
               aria-label="Chọn tháng xuất"
             >
               {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                <option key={m} value={m}>Tháng {m}</option>
+                <option key={m} value={m}>
+                  T{m}
+                </option>
               ))}
             </select>
-            <Button icon={Download} variant="outline" onClick={() => void window.api.export.exportPurchaseByMonth(Number(year), selectedMonth).then(f => f && toast.success('Đã xuất tháng ' + selectedMonth)).catch(e => reportAppError(toast, 'BC-EXP-06', 'Không xuất được', e))}>
-              Nhập theo tháng
+            <Button
+              icon={Download}
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                handleExport(
+                  () => window.api.export.exportPurchaseByMonth(Number(year), selectedMonth),
+                  'BC-EXP-06',
+                  'Không xuất được nhập theo tháng'
+                )
+              }
+            >
+              Nhập T{selectedMonth}
+            </Button>
+            <Button
+              icon={Download}
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                handleExport(
+                  () => window.api.export.exportSalesByMonth(Number(year), selectedMonth),
+                  'BC-EXP-07',
+                  'Không xuất được bán theo tháng'
+                )
+              }
+            >
+              Bán T{selectedMonth}
             </Button>
           </div>
-          <Button icon={Download} variant="outline" onClick={() => void window.api.export.exportInventoryReport().then(f => f && toast.success('Đã xuất tồn kho')).catch(e => reportAppError(toast, 'BC-EXP-03', 'Không xuất được tồn kho', e))}>
-            Xuất tồn kho
+          <Button
+            icon={Download}
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              handleExport(
+                () => window.api.export.exportInventoryReport(),
+                'BC-EXP-03',
+                'Không xuất được tồn kho'
+              )
+            }
+          >
+            Tồn kho
           </Button>
-          <Button icon={Download} variant="outline" onClick={() => void window.api.export.exportPurchaseReport(Number(year)).then(f => f && toast.success('Đã xuất nhập hàng')).catch(e => reportAppError(toast, 'BC-EXP-04', 'Không xuất được báo cáo nhập', e))}>
-            Xuất nhập hàng
+          <Button
+            icon={Download}
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              handleExport(
+                () => window.api.export.exportPurchaseReport(Number(year)),
+                'BC-EXP-04',
+                'Không xuất được báo cáo nhập'
+              )
+            }
+          >
+            Nhập hàng ({year})
           </Button>
-          <Button icon={Download} variant="outline" onClick={() => void window.api.export.exportSalesReport(Number(year)).then(f => f && toast.success('Đã xuất bán hàng')).catch(e => reportAppError(toast, 'BC-EXP-05', 'Không xuất được báo cáo xuất', e))}>
-            Xuất bán hàng
+          <Button
+            icon={Download}
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              handleExport(
+                () => window.api.export.exportSalesReport(Number(year)),
+                'BC-EXP-05',
+                'Không xuất được báo cáo xuất'
+              )
+            }
+          >
+            Bán hàng ({year})
           </Button>
         </div>
       </div>
 
+      {/* Year selector */}
       <div className="flex items-center gap-4 bg-white p-4 rounded-lg border border-gray-200">
         <div className="flex items-center gap-2">
           <label htmlFor="report-year" className="text-sm font-medium text-gray-700">
@@ -119,7 +193,7 @@ export function Reports() {
             disabled={availableYears.length === 0}
           >
             {availableYears.length === 0 ? (
-              <option value="">Chưa có dữ liệu nhập kho</option>
+              <option value="">Chưa có dữ liệu</option>
             ) : (
               availableYears.map((itemYear) => (
                 <option key={itemYear} value={String(itemYear)}>
@@ -131,10 +205,11 @@ export function Reports() {
         </div>
       </div>
 
+      {/* Detail table */}
       <div className="flex-1 grid grid-cols-1 gap-6 min-h-0">
         <div className="bg-white border border-gray-200 rounded-lg flex flex-col overflow-hidden">
           <div className="p-4 border-b border-gray-200 bg-gray-50/50">
-            <h3 className="font-semibold text-gray-900">Bảng chi tiết</h3>
+            <h3 className="font-semibold text-gray-900">Bảng chi tiết năm {year}</h3>
           </div>
           <div className="flex-1 overflow-auto p-4">
             <table className="w-full text-sm text-left">
@@ -142,6 +217,7 @@ export function Reports() {
                 <tr>
                   <th className="pb-2 font-medium">Tháng</th>
                   <th className="pb-2 font-medium text-right">Giá trị Nhập (VNĐ)</th>
+                  <th className="pb-2 font-medium text-right">Giá trị Xuất (VNĐ)</th>
                   <th className="pb-2 font-medium text-right">Số phiếu nhập</th>
                   <th className="pb-2 font-medium text-right">Số phiếu xuất</th>
                 </tr>
@@ -149,14 +225,14 @@ export function Reports() {
               <tbody className="divide-y divide-gray-100">
                 {loading && (
                   <tr>
-                    <td colSpan={4} className="py-6 text-center text-gray-500">
+                    <td colSpan={5} className="py-6 text-center text-gray-500">
                       Đang tải dữ liệu báo cáo…
                     </td>
                   </tr>
                 )}
                 {!loading && rows.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="py-6 text-center text-gray-500">
+                    <td colSpan={5} className="py-6 text-center text-gray-500">
                       Chưa có dữ liệu báo cáo
                     </td>
                   </tr>
@@ -165,17 +241,20 @@ export function Reports() {
                   Array.from({ length: 12 }, (_, i) => i + 1).map((m) => {
                     const importRow = byMonth.get(m)
                     const salesCount = salesMonthly[m - 1] ?? 0
+                    const salesOrderCount =
+                      importRow?.totalSalesOrders ?? (salesCount > 0 ? salesCount : 0)
                     return (
                       <tr key={m} className="hover:bg-gray-50/50">
                         <td className="py-3 font-medium">Tháng {m}</td>
                         <td className="py-3 text-right text-gray-900 font-medium">
                           {importRow ? formatCurrencyVnd(importRow.totalAmount) : '-'}
                         </td>
+                        <td className="py-3 text-right text-blue-700 font-medium">-</td>
                         <td className="py-3 text-right text-gray-600">
                           {importRow ? importRow.totalOrders : '-'}
                         </td>
                         <td className="py-3 text-right text-gray-600">
-                          {salesCount > 0 ? salesCount : '-'}
+                          {salesOrderCount > 0 ? salesOrderCount : '-'}
                         </td>
                       </tr>
                     )

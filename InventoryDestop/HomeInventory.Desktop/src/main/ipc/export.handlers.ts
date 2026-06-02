@@ -20,12 +20,9 @@ export function registerExportHandlers(ipcMain: IpcMain, db: Database): void {
     }
   )
 
-  ipcMain.handle(
-    IpcChannels.EXPORT_INVENTORY_REPORT,
-    async (): Promise<string | null> => {
-      return exportService.exportInventoryReport()
-    }
-  )
+  ipcMain.handle(IpcChannels.EXPORT_INVENTORY_REPORT, async (): Promise<string | null> => {
+    return exportService.exportInventoryReport()
+  })
 
   ipcMain.handle(
     IpcChannels.EXPORT_YEARLY_REPORT,
@@ -38,6 +35,13 @@ export function registerExportHandlers(ipcMain: IpcMain, db: Database): void {
     IpcChannels.EXPORT_PURCHASE_BY_MONTH,
     async (_event, year: number, month: number): Promise<string | null> => {
       return exportService.exportPurchaseByMonth(year, month)
+    }
+  )
+
+  ipcMain.handle(
+    IpcChannels.EXPORT_SALES_BY_MONTH,
+    async (_event, year: number, month: number): Promise<string | null> => {
+      return exportService.exportSalesByMonth(year, month)
     }
   )
 }

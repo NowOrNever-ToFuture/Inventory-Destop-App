@@ -35,7 +35,11 @@ function ToastView({ item, onClose }: { item: ToastItem; onClose: () => void }) 
       <div className="flex items-start gap-2">
         <Icon className="size-4 mt-0.5 shrink-0" />
         <p className="text-sm leading-5 flex-1">{item.message}</p>
-        <button type="button" onClick={onClose} className="opacity-70 hover:opacity-100 transition-opacity">
+        <button
+          type="button"
+          onClick={onClose}
+          className="opacity-70 hover:opacity-100 transition-opacity"
+        >
           <X className="size-4" />
         </button>
       </div>

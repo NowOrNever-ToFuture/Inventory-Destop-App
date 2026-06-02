@@ -30,7 +30,7 @@ export function ConfirmDialog({
       isOpen={isOpen}
       onClose={onClose}
       title=""
-      className="sm:max-w-[400px]"
+      className="!max-w-[380px]"
       footer={
         <>
           <Button variant="outline" onClick={onClose} disabled={loading}>
@@ -52,9 +52,7 @@ export function ConfirmDialog({
             isDestructive ? 'bg-red-100' : 'bg-blue-100'
           }`}
         >
-          <AlertTriangle
-            className={`size-6 ${isDestructive ? 'text-red-600' : 'text-blue-600'}`}
-          />
+          <AlertTriangle className={`size-6 ${isDestructive ? 'text-red-600' : 'text-blue-600'}`} />
         </div>
         <div>
           <h2 className="text-lg font-semibold text-gray-900">{title}</h2>

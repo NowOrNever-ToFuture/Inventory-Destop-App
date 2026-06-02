@@ -4,16 +4,16 @@
 
 Định nghĩa tại `src/shared/types/entities.ts`:
 
-| Entity | Fields chính |
-|---|---|
-| `Brand` | id, name, nameNormalized |
-| `Category` | id, name, nameNormalized, description? |
-| `Supplier` | id, name, nameNormalized, phone?, address?, taxCode? |
-| `Product` | id, model, modelNormalized, name, unit?, stockQuantity, importPrice, categoryId, brandId |
-| `PurchaseOrder` | id, code, supplierId, orderDate, totalAmount |
-| `PurchaseOrderItem` | id, purchaseOrderId, productId, quantity, unitCost, lineTotal |
-| `SalesOrder` | id, code, orderDate |
-| `SalesOrderItem` | id, salesOrderId, productId, quantity |
+| Entity              | Fields chính                                                                             |
+| ------------------- | ---------------------------------------------------------------------------------------- |
+| `Brand`             | id, name, nameNormalized                                                                 |
+| `Category`          | id, name, nameNormalized, description?                                                   |
+| `Supplier`          | id, name, nameNormalized, phone?, address?, taxCode?                                     |
+| `Product`           | id, model, modelNormalized, name, unit?, stockQuantity, importPrice, categoryId, brandId |
+| `PurchaseOrder`     | id, code, supplierId, orderDate, totalAmount                                             |
+| `PurchaseOrderItem` | id, purchaseOrderId, productId, quantity, unitCost, lineTotal                            |
+| `SalesOrder`        | id, code, orderDate                                                                      |
+| `SalesOrderItem`    | id, salesOrderId, productId, quantity                                                    |
 
 ## Money Storage
 
@@ -78,15 +78,18 @@ EXPORT_PURCHASE_REPORT / EXPORT_SALES_REPORT
 Migrations tại `src/infrastructure/database/migrations/`:
 
 **001_init.sql** - Schema ban đầu:
+
 - `brands`, `categories`, `suppliers`
 - `products` (stock_quantity REAL, import_price REAL)
 - `purchase_orders`, `purchase_order_items`
 - `sales_orders`, `sales_order_items`
 
 **002_add_warehouses_and_inventory_transactions.sql** - Thêm:
+
 - `warehouses`, `inventory_transactions`
 
 **003_convert_money_to_integer_cents.sql** - Convert:
+
 - `import_price`, `unit_cost`, `line_total`, `total_amount` → INTEGER
 
 **Base schema** cũng được hardcode trong `migrate.ts` để tránh crash khi migrations không được copy.

@@ -153,14 +153,12 @@ import { IpcChannels } from '@shared/contracts/ipc-channels'
 import type { WarehouseRequestDto, WarehouseResponseDto } from '@shared/types/dtos/warehouse.dto'
 
 export const warehouseApi = {
-  getAll: (): Promise<WarehouseResponseDto[]> =>
-    ipcRenderer.invoke(IpcChannels.WAREHOUSE_GET_ALL),
+  getAll: (): Promise<WarehouseResponseDto[]> => ipcRenderer.invoke(IpcChannels.WAREHOUSE_GET_ALL),
   create: (data: WarehouseRequestDto): Promise<WarehouseResponseDto> =>
     ipcRenderer.invoke(IpcChannels.WAREHOUSE_CREATE, data),
   update: (id: string, data: WarehouseRequestDto): Promise<WarehouseResponseDto> =>
     ipcRenderer.invoke(IpcChannels.WAREHOUSE_UPDATE, id, data),
-  delete: (id: string): Promise<void> =>
-    ipcRenderer.invoke(IpcChannels.WAREHOUSE_DELETE, id),
+  delete: (id: string): Promise<void> => ipcRenderer.invoke(IpcChannels.WAREHOUSE_DELETE, id)
 }
 
 export type WarehouseApi = typeof warehouseApi
@@ -173,7 +171,7 @@ import { warehouseApi } from './api/warehouse.api'
 
 const api = {
   // ... existing apis
-  warehouse: warehouseApi,
+  warehouse: warehouseApi
 }
 ```
 
@@ -197,7 +195,7 @@ Thêm route vào `src/renderer/src/App.tsx`:
 ```tsx
 import { Warehouses } from './pages/Warehouses'
 
-<Route path="warehouses" element={<Warehouses />} />
+;<Route path="warehouses" element={<Warehouses />} />
 ```
 
 Thêm nav item vào `src/renderer/src/components/layout/AppLayout.tsx`.

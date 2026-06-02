@@ -6,7 +6,11 @@
 
 ```tsx
 // ✅ React 19 - ref as prop
-function Input({ className, ref, ...props }: ComponentProps<'input'> & { ref?: Ref<HTMLInputElement> }) {
+function Input({
+  className,
+  ref,
+  ...props
+}: ComponentProps<'input'> & { ref?: Ref<HTMLInputElement> }) {
   return <input ref={ref} className={cn('...', className)} {...props} />
 }
 
@@ -67,11 +71,11 @@ useEffect(() => { void loadData() }, [toast]) // exhaustive-deps warning
 
 ```tsx
 // ✅ Không sync state từ prop trong effect
-const isEmpty = !value || value.trim().length === 0  // derive inline
+const isEmpty = !value || value.trim().length === 0 // derive inline
 
 // ❌ State synced to prop inside effect
 useEffect(() => {
-  if (!value) setOptions([])  // ERROR: state synced to prop
+  if (!value) setOptions([]) // ERROR: state synced to prop
 }, [value])
 ```
 
@@ -80,7 +84,7 @@ useEffect(() => {
 const normalized = years.toSorted((a, b) => b - a)
 const nextYear = normalized.includes(year) ? year : normalized[0]
 setAvailableYears(normalized)
-setYear(nextYear)  // cùng một event handler
+setYear(nextYear) // cùng một event handler
 
 // ❌ Chain qua effects
 setAvailableYears(normalized)
@@ -110,7 +114,9 @@ export function Products() {
     }
   }, [toast])
 
-  useEffect(() => { void loadProducts() }, [loadProducts])
+  useEffect(() => {
+    void loadProducts()
+  }, [loadProducts])
   // ...
 }
 ```
@@ -159,9 +165,9 @@ components/
 import { formatCurrencyVnd } from '@renderer/lib/format'
 
 // cents là integer (đã nhân 100)
-formatCurrencyVnd(10050)        // "100,50 ₫"
-formatCurrencyVnd(1000000)      // "10.000 ₫"
-formatCurrencyVnd(0)            // "0 ₫"
+formatCurrencyVnd(10050) // "100,50 ₫"
+formatCurrencyVnd(1000000) // "10.000 ₫"
+formatCurrencyVnd(0) // "0 ₫"
 ```
 
 ## Accessibility

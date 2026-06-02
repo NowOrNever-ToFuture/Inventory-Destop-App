@@ -99,49 +99,66 @@ export class SQLiteReportRepository {
    */
   async getImportSummaryAsync(year: number, month?: number): Promise<ImportSummaryDto[]> {
     if (month != null) {
-      // Single month
       const monthStr = String(month).padStart(2, '0')
       const prefix = `${year}-${monthStr}-%`
 
-      const row = this.db
+      const importRow = this.db
         .prepare<[string], { totalOrders: number; totalAmount: number }>(
-          `SELECT
-             COUNT(*)       AS totalOrders,
-             COALESCE(SUM(total_amount), 0) AS totalAmount
-           FROM purchase_orders
-           WHERE order_date LIKE ?`
+          `SELECT COUNT(*) AS totalOrders, COALESCE(SUM(total_amount), 0) AS totalAmount
+           FROM purchase_orders WHERE order_date LIKE ?`
         )
         .get(prefix) ?? { totalOrders: 0, totalAmount: 0 }
+
+      const salesRow = this.db
+        .prepare<
+          [string],
+          { totalSalesOrders: number }
+        >(`SELECT COUNT(*) AS totalSalesOrders FROM sales_orders WHERE order_date LIKE ?`)
+        .get(prefix) ?? { totalSalesOrders: 0 }
 
       return [
         {
           year,
           month,
-          totalOrders: row.totalOrders,
-          totalAmount: row.totalAmount
+          totalOrders: importRow.totalOrders,
+          totalAmount: importRow.totalAmount,
+          totalSalesOrders: salesRow.totalSalesOrders,
+          totalSalesAmount: 0
         }
       ]
     }
 
     // Full year – group by month
-    const rows = this.db
+    const importRows = this.db
       .prepare<[string], { month_num: number; totalOrders: number; totalAmount: number }>(
-        `SELECT
-           CAST(strftime('%m', order_date) AS INTEGER) AS month_num,
-           COUNT(*)       AS totalOrders,
-           COALESCE(SUM(total_amount), 0) AS totalAmount
+        `SELECT CAST(strftime('%m', order_date) AS INTEGER) AS month_num,
+                COUNT(*) AS totalOrders,
+                COALESCE(SUM(total_amount), 0) AS totalAmount
          FROM purchase_orders
          WHERE order_date LIKE ?
-         GROUP BY month_num
-         ORDER BY month_num`
+         GROUP BY month_num ORDER BY month_num`
       )
       .all(`${year}-%`)
 
-    return rows.map((r) => ({
+    const salesRows = this.db
+      .prepare<[string], { month_num: number; totalSalesOrders: number }>(
+        `SELECT CAST(strftime('%m', order_date) AS INTEGER) AS month_num,
+                COUNT(*) AS totalSalesOrders
+         FROM sales_orders
+         WHERE order_date LIKE ?
+         GROUP BY month_num ORDER BY month_num`
+      )
+      .all(`${year}-%`)
+
+    const salesMap = new Map(salesRows.map((r) => [r.month_num, r.totalSalesOrders]))
+
+    return importRows.map((r) => ({
       year,
       month: r.month_num,
       totalOrders: r.totalOrders,
-      totalAmount: r.totalAmount
+      totalAmount: r.totalAmount,
+      totalSalesOrders: salesMap.get(r.month_num) ?? 0,
+      totalSalesAmount: 0
     }))
   }
 

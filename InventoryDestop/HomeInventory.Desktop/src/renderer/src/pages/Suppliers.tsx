@@ -196,7 +196,9 @@ export function Suppliers() {
       >
         <div className="flex flex-col gap-4 py-2">
           <div>
-            <label htmlFor="supplier-name" className="block text-sm font-medium text-gray-700 mb-1">Tên đại lý (*)</label>
+            <label htmlFor="supplier-name" className="block text-sm font-medium text-gray-700 mb-1">
+              Tên đại lý (*)
+            </label>
             <Input
               id="supplier-name"
               value={form.name}
@@ -205,7 +207,12 @@ export function Suppliers() {
             />
           </div>
           <div>
-            <label htmlFor="supplier-phone" className="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
+            <label
+              htmlFor="supplier-phone"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Số điện thoại
+            </label>
             <Input
               id="supplier-phone"
               value={form.phone}

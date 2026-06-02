@@ -3,6 +3,8 @@ export interface ImportSummaryDto {
   year: number
   totalOrders: number
   totalAmount: number
+  totalSalesOrders: number
+  totalSalesAmount: number
 }
 
 export interface ReportAvailableYearsDto {

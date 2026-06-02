@@ -28,17 +28,13 @@ export class SQLiteSalesOrderItemRepository {
   constructor(private readonly db: Database) {}
 
   async getAllAsync(): Promise<StandaloneSalesOrderItemResponseDto[]> {
-    const rows = this.db
-      .prepare<[], SalesOrderItemRow>('SELECT * FROM sales_order_items')
-      .all()
+    const rows = this.db.prepare<[], SalesOrderItemRow>('SELECT * FROM sales_order_items').all()
     return rows.map(toResponse)
   }
 
   async getByIdAsync(id: string): Promise<StandaloneSalesOrderItemResponseDto | null> {
     const row = this.db
-      .prepare<[string], SalesOrderItemRow>(
-        'SELECT * FROM sales_order_items WHERE id = ?'
-      )
+      .prepare<[string], SalesOrderItemRow>('SELECT * FROM sales_order_items WHERE id = ?')
       .get(id)
     return row ? toResponse(row) : null
   }
@@ -63,9 +59,7 @@ export class SQLiteSalesOrderItemRepository {
     request: StandaloneSalesOrderItemRequestDto
   ): Promise<StandaloneSalesOrderItemResponseDto> {
     const existing = this.db
-      .prepare<[string], SalesOrderItemRow>(
-        'SELECT * FROM sales_order_items WHERE id = ?'
-      )
+      .prepare<[string], SalesOrderItemRow>('SELECT * FROM sales_order_items WHERE id = ?')
       .get(id)
 
     if (!existing) {
@@ -73,9 +67,10 @@ export class SQLiteSalesOrderItemRepository {
     }
 
     this.db
-      .prepare<[string, number, string], void>(
-        'UPDATE sales_order_items SET product_id = ?, quantity = ? WHERE id = ?'
-      )
+      .prepare<
+        [string, number, string],
+        void
+      >('UPDATE sales_order_items SET product_id = ?, quantity = ? WHERE id = ?')
       .run(request.productId, request.quantity, id)
 
     return (await this.getByIdAsync(id))!

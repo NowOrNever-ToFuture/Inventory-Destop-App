@@ -1,6 +1,9 @@
 node_modules
 dist
 out
+releases
 .DS_Store
 .eslintcache
 *.log*
+*.tsbuildinfo
+.turbo

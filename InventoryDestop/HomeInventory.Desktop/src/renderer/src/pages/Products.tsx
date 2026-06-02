@@ -7,9 +7,10 @@ import { Badge } from '@renderer/components/ui/badge'
 import { Modal } from '@renderer/components/ui/modal'
 import { Input } from '@renderer/components/ui/input'
 import { useToast } from '@renderer/components/shared/ToastProvider'
+import { useAppData } from '@renderer/components/shared/AppDataProvider'
 import { reportAppError } from '@renderer/lib/app-error'
 import { formatCurrencyVnd } from '@renderer/lib/format'
-import type { ProductResponseDto, CategoryResponseDto, BrandResponseDto } from '@shared/types/dtos'
+import type { ProductResponseDto } from '@shared/types/dtos'
 
 interface ProductRow extends ProductResponseDto {
   categoryName: string
@@ -18,37 +19,18 @@ interface ProductRow extends ProductResponseDto {
 
 export function Products() {
   const toast = useToast()
+  const { categories, brands } = useAppData()
   const [search, setSearch] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
   const [products, setProducts] = useState<ProductResponseDto[]>([])
-  const [categories, setCategories] = useState<CategoryResponseDto[]>([])
-  const [brands, setBrands] = useState<BrandResponseDto[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [newProduct, setNewProduct] = useState({ model: '', name: '', categoryId: '', brandId: '' })
 
-  // Use ref for debounced search to avoid extra re-renders
   const debouncedSearchRef = useRef('')
   const pageSize = 10
-
-  // Load lookup data once
-  useEffect(() => {
-    const loadLookups = async () => {
-      try {
-        const [categoryData, brandData] = await Promise.all([
-          window.api.category.getAll(),
-          window.api.brand.getAll()
-        ])
-        setCategories(categoryData)
-        setBrands(brandData)
-      } catch (error) {
-        reportAppError(toast, 'SP-LOAD-02', 'Không tải được dữ liệu danh mục sản phẩm', error)
-      }
-    }
-    void loadLookups()
-  }, [toast])
 
   const loadProducts = useCallback(
     async (searchVal: string, catId: string, pg: number) => {
@@ -154,7 +136,11 @@ export function Products() {
       align: 'right',
       width: '50px',
       cell: () => (
-        <button type="button" className="text-gray-400 hover:text-gray-900 p-1" aria-label="Tùy chọn">
+        <button
+          type="button"
+          className="text-gray-400 hover:text-gray-900 p-1"
+          aria-label="Tùy chọn"
+        >
           <MoreVertical size={16} />
         </button>
       )

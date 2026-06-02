@@ -43,6 +43,7 @@ export default defineConfig({
     }
   },
   renderer: {
+    publicDir: resolve('resources'),
     resolve: {
       alias: {
         '@renderer': resolve('src/renderer/src'),

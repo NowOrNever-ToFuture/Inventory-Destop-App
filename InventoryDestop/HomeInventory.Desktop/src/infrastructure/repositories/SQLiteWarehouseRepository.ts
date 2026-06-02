@@ -29,9 +29,7 @@ export class SQLiteWarehouseRepository {
   constructor(private readonly db: Database) {}
 
   async getAllAsync(): Promise<WarehouseResponseDto[]> {
-    const rows = this.db
-      .prepare<[], WarehouseRow>('SELECT * FROM warehouses ORDER BY name')
-      .all()
+    const rows = this.db.prepare<[], WarehouseRow>('SELECT * FROM warehouses ORDER BY name').all()
     return rows.map(toResponse)
   }
 
@@ -46,9 +44,10 @@ export class SQLiteWarehouseRepository {
     const id = crypto.randomUUID()
 
     this.db
-      .prepare<[string, string, string | null], void>(
-        'INSERT INTO warehouses (id, name, location) VALUES (?, ?, ?)'
-      )
+      .prepare<
+        [string, string, string | null],
+        void
+      >('INSERT INTO warehouses (id, name, location) VALUES (?, ?, ?)')
       .run(id, request.name.trim(), request.location ?? null)
 
     return (await this.getByIdAsync(id))!
@@ -64,18 +63,17 @@ export class SQLiteWarehouseRepository {
     }
 
     this.db
-      .prepare<[string, string | null, string], void>(
-        'UPDATE warehouses SET name = ?, location = ? WHERE id = ?'
-      )
+      .prepare<
+        [string, string | null, string],
+        void
+      >('UPDATE warehouses SET name = ?, location = ? WHERE id = ?')
       .run(request.name.trim(), request.location ?? null, id)
 
     return (await this.getByIdAsync(id))!
   }
 
   async deleteAsync(id: string): Promise<boolean> {
-    const result = this.db
-      .prepare<[string], void>('DELETE FROM warehouses WHERE id = ?')
-      .run(id)
+    const result = this.db.prepare<[string], void>('DELETE FROM warehouses WHERE id = ?').run(id)
     return result.changes > 0
   }
 }

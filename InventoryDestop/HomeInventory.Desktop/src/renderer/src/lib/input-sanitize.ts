@@ -1,4 +1,4 @@
-export const UI_MAX_NUMBER = 1_000_000_000
+export const UI_MAX_NUMBER = 100_000_000_000_000
 export const UI_MAX_WORDS = 100
 
 export function clampNumberString(value: string, max = UI_MAX_NUMBER): string {

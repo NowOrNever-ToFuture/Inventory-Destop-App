@@ -62,6 +62,7 @@ export function registerProductHandlers(ipcMain: IpcMain, db: Database): void {
 ```
 
 **Quy tắc IPC Handler:**
+
 - KHÔNG chứa business logic
 - KHÔNG query SQLite trực tiếp (trừ trường hợp đặc biệt như report inline queries)
 - Chỉ map IPC request → use case method → return response
@@ -85,8 +86,7 @@ export const productApi = {
   update: (id: string, data: ProductRequestDto): Promise<ProductResponseDto> =>
     ipcRenderer.invoke(IpcChannels.PRODUCT_UPDATE, id, data),
 
-  delete: (id: string): Promise<void> =>
-    ipcRenderer.invoke(IpcChannels.PRODUCT_DELETE, id),
+  delete: (id: string): Promise<void> => ipcRenderer.invoke(IpcChannels.PRODUCT_DELETE, id)
 }
 
 export type ProductApi = typeof productApi
@@ -101,7 +101,7 @@ import { warehouseApi } from './api/warehouse.api'
 
 const api = {
   // ... existing
-  warehouse: warehouseApi,
+  warehouse: warehouseApi
 }
 ```
 
@@ -166,6 +166,6 @@ export function registerIpcHandlers(db: Database): void {
 const products = await window.api.product.getAll({ page: 1, pageSize: 20 })
 
 // TypeScript biết type nhờ window.api: DesktopApi trong index.d.ts
-window.api.product.create(data)  // → Promise<ProductResponseDto>
-window.api.export.exportPurchaseReport(2025)  // → Promise<string | null>
+window.api.product.create(data) // → Promise<ProductResponseDto>
+window.api.export.exportPurchaseReport(2025) // → Promise<string | null>
 ```

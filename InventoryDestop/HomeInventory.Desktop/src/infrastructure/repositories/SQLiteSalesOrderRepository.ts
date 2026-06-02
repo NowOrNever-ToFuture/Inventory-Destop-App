@@ -32,6 +32,10 @@ export class SQLiteSalesOrderRepository {
 
   private resolveOrderDate(orderDate?: string): string {
     if (orderDate && /^\d{4}-\d{2}-\d{2}$/.test(orderDate)) {
+      const today = new Date().toISOString().slice(0, 10)
+      if (orderDate > today) {
+        throw new Error('Ngày lập phiếu không thể là ngày trong tương lai.')
+      }
       return orderDate
     }
     return new Date().toISOString().slice(0, 10)

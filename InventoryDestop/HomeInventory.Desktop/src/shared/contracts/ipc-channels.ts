@@ -56,7 +56,26 @@ export const IpcChannels = {
   EXPORT_SALES_REPORT: 'export:salesReport',
   EXPORT_INVENTORY_REPORT: 'export:inventoryReport',
   EXPORT_YEARLY_REPORT: 'export:yearlyReport',
-  EXPORT_PURCHASE_BY_MONTH: 'export:purchaseByMonth'
+  EXPORT_PURCHASE_BY_MONTH: 'export:purchaseByMonth',
+  EXPORT_SALES_BY_MONTH: 'export:salesByMonth',
+
+  // Settings
+  SETTINGS_GET_ALL: 'settings:getAll',
+  SETTINGS_SET: 'settings:set',
+  SETTINGS_GET_DATA_PATH: 'settings:getDataPath',
+  SETTINGS_OPEN_FOLDER_PICKER: 'settings:openFolderPicker',
+
+  // File
+  FILE_SAVE_ATTACHMENT: 'file:saveAttachment',
+  FILE_OPEN: 'file:open',
+  FILE_PICK_ATTACHMENT: 'file:pickAttachment',
+  FILE_READ_ATTACHMENT: 'file:readAttachment',
+
+  // Auth
+  AUTH_CHECK_SETUP: 'auth:checkSetup',
+  AUTH_LOGIN: 'auth:login',
+  AUTH_CHANGE_PASSWORD: 'auth:changePassword',
+  AUTH_SETUP: 'auth:setup'
 } as const
 
 export type IpcChannel = (typeof IpcChannels)[keyof typeof IpcChannels]

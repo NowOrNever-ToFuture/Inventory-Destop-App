@@ -1,13 +1,5 @@
 import { useMemo } from 'react'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer
-} from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { formatCurrencyVnd } from '@renderer/lib/format'
 
 export interface TopSupplierData {
@@ -26,7 +18,16 @@ interface TopSupplierBarChartProps {
   onMonthChange: (month: number) => void
 }
 
-const BAR_COLORS = ['#2563eb', '#0ea5e9', '#06b6d4', '#14b8a6', '#22c55e', '#84cc16', '#f59e0b', '#f97316']
+const BAR_COLORS = [
+  '#2563eb',
+  '#0ea5e9',
+  '#06b6d4',
+  '#14b8a6',
+  '#22c55e',
+  '#84cc16',
+  '#f59e0b',
+  '#f97316'
+]
 
 export function TopSupplierBarChart({
   year,
@@ -41,7 +42,10 @@ export function TopSupplierBarChart({
   const chartData = useMemo(
     () =>
       data.map((item, i) => ({
-        name: item.supplierName.length > 15 ? item.supplierName.slice(0, 15) + '\u2026' : item.supplierName,
+        name:
+          item.supplierName.length > 15
+            ? item.supplierName.slice(0, 15) + '\u2026'
+            : item.supplierName,
         fullName: item.supplierName,
         amount: item.totalAmount,
         fill: BAR_COLORS[i % BAR_COLORS.length]

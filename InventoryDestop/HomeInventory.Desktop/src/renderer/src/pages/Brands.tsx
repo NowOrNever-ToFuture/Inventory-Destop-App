@@ -173,7 +173,9 @@ export function Brands() {
       >
         <div className="flex flex-col gap-4 py-2">
           <div>
-            <label htmlFor="brand-name" className="block text-sm font-medium text-gray-700 mb-1">Tên hãng (*)</label>
+            <label htmlFor="brand-name" className="block text-sm font-medium text-gray-700 mb-1">
+              Tên hãng (*)
+            </label>
             <Input
               id="brand-name"
               value={name}

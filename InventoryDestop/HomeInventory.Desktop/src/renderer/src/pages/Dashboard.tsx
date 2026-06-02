@@ -107,7 +107,12 @@ export function Dashboard() {
         })
         setTopImportedItems(rows)
       } catch (error) {
-        reportAppError(toast, 'DB-LOAD-03', 'Không tải được dữ liệu mặt hàng nhập nhiều nhất', error)
+        reportAppError(
+          toast,
+          'DB-LOAD-03',
+          'Không tải được dữ liệu mặt hàng nhập nhiều nhất',
+          error
+        )
         setTopImportedItems([])
       } finally {
         setLoadingTopImportedItems(false)

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Outlet, NavLink } from 'react-router-dom'
 import {
   LayoutDashboard,
@@ -8,9 +9,15 @@ import {
   Award,
   Truck,
   BarChart3,
+  Settings,
   Bell
 } from 'lucide-react'
 import { cn } from '@renderer/lib/utils'
+import type { AppSettingsDto } from '@shared/types/dtos/settings.dto'
+
+import { useAuth } from '@renderer/components/shared/AuthProvider'
+
+const APP_ICON = '/icon_destop_app_1024x1024.png'
 
 interface SidebarItemProps {
   icon: React.ElementType
@@ -42,14 +49,41 @@ const SidebarItem = ({ icon: Icon, label, to }: SidebarItemProps) => {
 }
 
 export function AppLayout() {
+  const [storeName, setStoreName] = useState('HomeInventory')
+  const { logout, username } = useAuth()
+
+  useEffect(() => {
+    const loadStoreName = async () => {
+      try {
+        const s = await window.api.settings.getAll()
+        if (s.storeName) setStoreName(s.storeName)
+      } catch {
+        // keep default
+      }
+    }
+    void loadStoreName()
+
+    // Listen for settings updates
+    const handler = (e: Event) => {
+      const updated = (e as CustomEvent<AppSettingsDto>).detail
+      if (updated?.storeName) setStoreName(updated.storeName)
+    }
+    window.addEventListener('settings:updated', handler)
+    return () => window.removeEventListener('settings:updated', handler)
+  }, [])
+
   return (
     <div className="flex h-screen w-full bg-gray-50 text-gray-900 font-sans selection:bg-blue-100">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
-        <div className="h-16 flex items-center px-6 border-b border-gray-200">
-          <div className="flex items-center gap-2 text-blue-600 font-bold text-lg">
-            <Package size={24} strokeWidth={2.5} />
-            HomeInventory
+      <aside className="w-72 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
+        <div className="h-16 flex items-center px-5 border-b border-gray-200">
+          <div className="flex items-center gap-3 font-bold text-lg min-w-0">
+            <img
+              src={APP_ICON}
+              alt={storeName}
+              className="size-10 rounded-lg object-cover shadow-sm shrink-0"
+            />
+            <span className="text-gray-900">{storeName}</span>
           </div>
         </div>
 
@@ -77,17 +111,26 @@ export function AppLayout() {
             Hệ thống
           </div>
           <SidebarItem icon={BarChart3} label="Báo cáo" to="/reports" />
+          <SidebarItem icon={Settings} label="Cài đặt" to="/settings" />
         </div>
 
-        <div className="p-4 border-t border-gray-200">
-          <div className="flex items-center gap-3">
-            <div className="size-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm">
-              AD
+        <div className="p-3 border-t border-gray-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="size-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm">
+                {username ? username[0].toUpperCase() : 'A'}
+              </div>
+              <div className="text-sm">
+                <div className="font-medium text-gray-900">{username ?? 'Admin'}</div>
+              </div>
             </div>
-            <div className="text-sm">
-              <div className="font-medium text-gray-900">Admin</div>
-              <div className="text-gray-500 text-xs">admin@home.local</div>
-            </div>
+            <button
+              onClick={logout}
+              className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+              title="Đăng xuất"
+            >
+              ✕
+            </button>
           </div>
         </div>
       </aside>
@@ -98,7 +141,11 @@ export function AppLayout() {
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 flex-shrink-0">
           <div />
           <div className="flex items-center gap-4">
-            <button type="button" className="text-gray-400 hover:text-gray-600 relative" aria-label="Thông báo">
+            <button
+              type="button"
+              className="text-gray-400 hover:text-gray-600 relative"
+              aria-label="Thông báo"
+            >
               <Bell size={20} />
               <span className="absolute top-0 right-0 size-2 bg-red-500 rounded-full border border-white"></span>
             </button>

@@ -45,18 +45,20 @@ export class SQLiteInventoryTransactionRepository {
 
   async getAllAsync(): Promise<InventoryTransactionResponseDto[]> {
     const rows = this.db
-      .prepare<[], InventoryTransactionRow>(
-        'SELECT * FROM inventory_transactions ORDER BY transaction_date DESC'
-      )
+      .prepare<
+        [],
+        InventoryTransactionRow
+      >('SELECT * FROM inventory_transactions ORDER BY transaction_date DESC')
       .all()
     return rows.map(toResponse)
   }
 
   async getByIdAsync(id: string): Promise<InventoryTransactionResponseDto | null> {
     const row = this.db
-      .prepare<[string], InventoryTransactionRow>(
-        'SELECT * FROM inventory_transactions WHERE id = ?'
-      )
+      .prepare<
+        [string],
+        InventoryTransactionRow
+      >('SELECT * FROM inventory_transactions WHERE id = ?')
       .get(id)
     return row ? toResponse(row) : null
   }
@@ -91,9 +93,10 @@ export class SQLiteInventoryTransactionRepository {
     request: InventoryTransactionRequestDto
   ): Promise<InventoryTransactionResponseDto> {
     const existing = this.db
-      .prepare<[string], InventoryTransactionRow>(
-        'SELECT * FROM inventory_transactions WHERE id = ?'
-      )
+      .prepare<
+        [string],
+        InventoryTransactionRow
+      >('SELECT * FROM inventory_transactions WHERE id = ?')
       .get(id)
 
     if (!existing) {

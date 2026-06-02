@@ -4,30 +4,30 @@
 
 ### Files
 
-| Loại | Pattern | Ví dụ |
-|---|---|---|
-| Service/Repository class | PascalCase | `ProductService.ts`, `SQLiteProductRepository.ts` |
-| IPC handler | `<domain>.handlers.ts` | `product.handlers.ts`, `purchase-order.handlers.ts` |
-| Preload API | `<domain>.api.ts` | `product.api.ts`, `purchase-order.api.ts` |
-| DTO | `<domain>.dto.ts` | `product.dto.ts`, `sales-order.dto.ts` |
-| React page | PascalCase | `Products.tsx`, `PurchaseOrder.tsx` |
-| React component | PascalCase | `DataTable.tsx`, `ConfirmDialog.tsx` |
-| UI primitive | PascalCase | `button.tsx`, `input.tsx`, `modal.tsx` |
-| Use case | `<Action><Domain>UseCase.ts` | `CreateProductUseCase.ts`, `GetAllBrandUseCase.ts` |
-| SQLite repository | `SQLite<Domain>Repository.ts` | `SQLiteProductRepository.ts` |
+| Loại                     | Pattern                       | Ví dụ                                               |
+| ------------------------ | ----------------------------- | --------------------------------------------------- |
+| Service/Repository class | PascalCase                    | `ProductService.ts`, `SQLiteProductRepository.ts`   |
+| IPC handler              | `<domain>.handlers.ts`        | `product.handlers.ts`, `purchase-order.handlers.ts` |
+| Preload API              | `<domain>.api.ts`             | `product.api.ts`, `purchase-order.api.ts`           |
+| DTO                      | `<domain>.dto.ts`             | `product.dto.ts`, `sales-order.dto.ts`              |
+| React page               | PascalCase                    | `Products.tsx`, `PurchaseOrder.tsx`                 |
+| React component          | PascalCase                    | `DataTable.tsx`, `ConfirmDialog.tsx`                |
+| UI primitive             | PascalCase                    | `button.tsx`, `input.tsx`, `modal.tsx`              |
+| Use case                 | `<Action><Domain>UseCase.ts`  | `CreateProductUseCase.ts`, `GetAllBrandUseCase.ts`  |
+| SQLite repository        | `SQLite<Domain>Repository.ts` | `SQLiteProductRepository.ts`                        |
 
 ### Classes & Interfaces
 
-| Loại | Pattern | Ví dụ |
-|---|---|---|
-| Repository interface | `<Domain>Repository` | `ProductRepository` |
-| Use case class | `<Action><Domain>UseCase` | `CreateProductUseCase` |
-| SQLite repository | `SQLite<Domain>Repository` | `SQLiteProductRepository` |
-| Use case facade | `<Domain>UseCases` | `ProductUseCases` |
-| DTO request | `<Domain>RequestDto` | `ProductRequestDto` |
-| DTO response | `<Domain>ResponseDto` | `ProductResponseDto` |
-| DTO query | `<Domain>GetAllQueryDto` | `ProductGetAllQueryDto` |
-| DTO list response | `<Domain>GetAllResponseDto` | `ProductGetAllResponseDto` |
+| Loại                 | Pattern                     | Ví dụ                      |
+| -------------------- | --------------------------- | -------------------------- |
+| Repository interface | `<Domain>Repository`        | `ProductRepository`        |
+| Use case class       | `<Action><Domain>UseCase`   | `CreateProductUseCase`     |
+| SQLite repository    | `SQLite<Domain>Repository`  | `SQLiteProductRepository`  |
+| Use case facade      | `<Domain>UseCases`          | `ProductUseCases`          |
+| DTO request          | `<Domain>RequestDto`        | `ProductRequestDto`        |
+| DTO response         | `<Domain>ResponseDto`       | `ProductResponseDto`       |
+| DTO query            | `<Domain>GetAllQueryDto`    | `ProductGetAllQueryDto`    |
+| DTO list response    | `<Domain>GetAllResponseDto` | `ProductGetAllResponseDto` |
 
 ### IPC Channels
 
