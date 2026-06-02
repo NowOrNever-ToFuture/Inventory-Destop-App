@@ -1,6 +1,12 @@
 # HomeInventory Desktop
 
-Ứng dụng desktop quản lý kho hàng gia đình. Xây dựng với Electron + React 19 + TypeScript + SQLite.
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![Electron](https://img.shields.io/badge/Electron-39-blue)](https://www.electronjs.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6)](https://www.typescriptlang.org/)
+
+> Ứng dụng desktop quản lý kho hàng gia đình.  
+> Xây dựng với Electron + React 19 + TypeScript + SQLite (better-sqlite3).
 
 ## Tính năng
 
