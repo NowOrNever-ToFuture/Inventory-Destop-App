@@ -15,46 +15,30 @@ import { Setup } from './pages/Setup'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isLoggedIn, checkingSetup, setupComplete } = useAuth()
-
-  if (checkingSetup)
-    return (
-      <div className="min-h-screen flex items-center justify-center text-gray-500 text-sm">
-        Đang tải...
-      </div>
-    )
+  if (checkingSetup) return null
   if (!setupComplete) return <Navigate to="/setup" replace />
   if (!isLoggedIn) return <Navigate to="/login" replace />
   return <>{children}</>
 }
 
 function App(): React.JSX.Element {
-  const { checkingSetup, setupComplete } = useAuth()
+  const { checkingSetup, setupComplete, setupStatus } = useAuth()
 
-  if (checkingSetup)
+  if (checkingSetup) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-500 text-sm">
-        Đang tải...
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 gap-4">
+        <div className="size-12 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin" />
+        <p className="text-gray-500 text-sm">{setupStatus || 'Dang tai...'}</p>
       </div>
     )
+  }
 
   return (
     <HashRouter>
       <Routes>
-        {/* Setup route - outside AppLayout */}
         {!setupComplete && <Route path="/setup" element={<Setup />} />}
-
-        {/* Login route - outside AppLayout */}
         <Route path="/login" element={<Login />} />
-
-        {/* Protected routes - inside AppLayout */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <AppLayout />
-            </ProtectedRoute>
-          }
-        >
+        <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
           <Route index element={<Dashboard />} />
           <Route path="products" element={<Products />} />
           <Route path="purchase-orders" element={<PurchaseOrder />} />
@@ -65,14 +49,7 @@ function App(): React.JSX.Element {
           <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<Settings />} />
         </Route>
-
-        {/* Fallback redirect */}
-        <Route
-          path="*"
-          element={
-            setupComplete ? <Navigate to="/login" replace /> : <Navigate to="/setup" replace />
-          }
-        />
+        <Route path="*" element={setupComplete ? <Navigate to="/login" replace /> : <Navigate to="/setup" replace />} />
       </Routes>
     </HashRouter>
   )

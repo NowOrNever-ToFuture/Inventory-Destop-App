@@ -5,6 +5,7 @@ interface AuthState {
   username: string | null
   checkingSetup: boolean
   setupComplete: boolean
+  setupStatus: string
 }
 
 interface AuthContextType extends AuthState {
@@ -21,15 +22,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoggedIn: false,
     username: null,
     checkingSetup: true,
-    setupComplete: false
+    setupComplete: false,
+    setupStatus: ''
   })
 
   const refreshSetup = useCallback(async () => {
-    setState((s) => ({ ...s, checkingSetup: true }))
+    setState((s) => ({ ...s, checkingSetup: true, setupStatus: 'Dang kiem tra cau hinh...' }))
     try {
       // Check if installer left a config (from NSIS installer)
       const installerConfig = await window.api.installer.readConfig<{ dataPath: string; username: string; password: string; storeName: string; setupComplete: boolean }>()
       if (installerConfig?.setupComplete && installerConfig.username && installerConfig.password) {
+        setState((s) => ({ ...s, setupStatus: 'Dang tao co so du lieu va tai khoan quan tri...' }))
         // Auto-run setup from installer config
         const result = await window.api.auth.setup(
           installerConfig.username,
@@ -38,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           installerConfig.dataPath || ''
         )
         if (result.success) {
+          setState((s) => ({ ...s, setupStatus: 'Cai dat hoan tat!' }))
           await window.api.installer.clearConfig()
         }
       }
