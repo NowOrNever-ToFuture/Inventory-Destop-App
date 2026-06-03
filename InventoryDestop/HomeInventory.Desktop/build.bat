@@ -1,5 +1,4 @@
 @echo off
-chcp 65001 >nul
 title HomeInventory Desktop - Build Script
 setlocal enabledelayedexpansion
 
@@ -9,20 +8,25 @@ setlocal enabledelayedexpansion
 ::  Tao installer (co icon, Start Menu, Desktop shortcut)
 :: ============================================================
 
-call :showBanner
+echo.
+echo  ========================================
+echo    HomeInventory Desktop - Build Script
+echo  ========================================
+echo.
 
 :: ─── Kiem tra Node.js ───────────────────────────────────────
-call :showStep "1/4" "Kiem tra Node.js"
+echo [1/4] Dang kiem tra Node.js...
+echo --------------------------------
+
 where node >nul 2>&1
 if %errorlevel% neq 0 (
     echo   [!] Node.js chua duoc cai dat.
-    echo   Dang mo trang download...
-    start https://nodejs.org
+    echo   Vui long tai va cai dat Node.js tu: https://nodejs.org
     echo.
-    echo   Sau khi tai va cai dat xong, hay chay lai script nay.
     pause
     exit /b 1
 )
+
 for /f "tokens=*" %%i in ('node -v') do set NODE_VER=%%i
 echo   [OK] Node.js %NODE_VER%
 
@@ -32,12 +36,14 @@ if %errorlevel% neq 0 (
     pause
     exit /b 1
 )
+
 for /f "tokens=*" %%i in ('npm -v') do set NPM_VER=%%i
 echo   [OK] npm v%NPM_VER%
 echo.
 
 :: ─── Install dependencies ──────────────────────────────────
-call :showStep "2/4" "Cai dat dependencies"
+echo [2/4] Dang cai dat dependencies...
+echo --------------------------------
 echo.
 call npm install
 if %errorlevel% neq 0 (
@@ -52,7 +58,8 @@ echo.
 for /f "tokens=*" %%i in ('node -e "console.log(require('./package.json').version)"') do set APP_VERSION=%%i
 
 :: ─── Chon OS de build ──────────────────────────────────────
-call :showStep "3/4" "Chon he dieu hanh"
+echo [3/4] Chon he dieu hanh de build:
+echo --------------------------------
 echo.
 echo   [1] Windows  (setup.exe co icon + Start Menu + Desktop shortcut)
 echo   [2] macOS    (file .dmg)
@@ -80,23 +87,14 @@ echo.
 echo   [OK] Da chon: %OS_NAME%
 echo.
 
-:: ─── Build (co progress bar) ──────────────────────────────
-call :showStep "4/4" "Dang build installer cho %OS_NAME%..."
+:: ─── Build ────────────────────────────────────────────────
+echo [4/4] Dang build installer cho %OS_NAME%...
+echo --------------------------------
 echo.
-echo   Qua trinh nay co the mat vai phut...
+echo   Qua trinh nay co the mat vai phut, vui long cho...
 echo.
 
-:: Chay build voi PowerShell progress bar
-powershell -NoProfile -Command ^
-    $activity = "Building HomeInventory Desktop for %OS_NAME%"; ^
-    $progress = 0; ^
-    Write-Progress -Activity $activity -Status "Dang build..." -PercentComplete 30 -CurrentOperation "electron-vite build"; ^
-    & cmd /c "npm run %BUILD_CMD% 2>&1"; ^
-    if ($LASTEXITCODE -eq 0) { ^
-        Write-Progress -Activity $activity -Status "Build xong" -PercentComplete 90 -CurrentOperation "Dang copy installer..."; ^
-        Write-Progress -Activity $activity -Status "Hoan tat" -PercentComplete 100 -Completed; ^
-    }
-
+call npm run %BUILD_CMD%
 if %errorlevel% neq 0 (
     echo.
     echo   [!] Build that bai. Kiem tra loi o tren.
@@ -106,7 +104,7 @@ if %errorlevel% neq 0 (
 
 :: ─── Copy installer sang releases/ ─────────────────────────
 echo.
-echo   Dang copy installer vao releases...
+echo   Dang copy installer vao thu muc releases...
 if not exist releases mkdir releases
 
 set INSTALLER_FOUND=0
@@ -132,33 +130,18 @@ if "%CHOICE%"=="3" (
 
 echo.
 if %INSTALLER_FOUND%==1 (
-    echo   ========================================
-    echo     Build hoan tat!
-    echo     OS     : %OS_NAME%
-    echo     Version: v%APP_VERSION%
-    echo     Folder : releases\
-    echo   ========================================
+    echo  ========================================
+    echo    Build hoan tat!
+    echo    OS     : %OS_NAME%
+    echo    Version: v%APP_VERSION%
+    echo    Folder : releases\
+    echo  ========================================
     echo.
     echo   Chay file installer trong releases/ de cai dat.
     echo   (Icon se xuat hien o Start Menu va Desktop)
 ) else (
     echo   [!] Khong tim thay file installer trong dist/
+    echo   Kiem tra lai ket qua build o tren.
 )
 echo.
 pause
-exit /b 0
-
-:: ─── Functions ─────────────────────────────────────────────
-
-:showBanner
-echo.
-echo   ╔══════════════════════════════════════════╗
-echo   ║     HomeInventory Desktop - Build        ║
-echo   ╚══════════════════════════════════════════╝
-echo.
-goto :eof
-
-:showStep
-echo [%~1] %~2
-echo --------------------------------
-goto :eof
