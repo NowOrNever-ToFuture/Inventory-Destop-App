@@ -29,7 +29,6 @@ nsis:
   uninstallerIcon: build/icon.ico
   installerHeaderIcon: build/icon.ico
   license: LICENSE
-  include: build/installer.nsh
 mac:
   category: public.app-category.utilities
   entitlementsInherit: build/entitlements.mac.plist
