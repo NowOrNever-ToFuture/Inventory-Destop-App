@@ -1,5 +1,6 @@
 appId: com.homeinventory.desktop
 productName: HomeInventory Desktop
+copyright: Copyright © 2026 HomeInventory
 directories:
   buildResources: build
 files:
@@ -13,14 +14,23 @@ asarUnpack:
   - resources/**
 win:
   executableName: HomeInventory
+  verifyUpdateCodeSignature: false
+  requestedExecutionLevel: asInvoker
 nsis:
   artifactName: ${productName}-${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
+  createStartMenuShortcut: true
   oneClick: false
   allowToChangeInstallationDirectory: true
+  perMachine: false
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  installerHeaderIcon: build/icon.ico
+  license: LICENSE
 mac:
+  category: public.app-category.utilities
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
