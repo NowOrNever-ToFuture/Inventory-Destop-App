@@ -71,6 +71,10 @@ export const IpcChannels = {
   FILE_PICK_ATTACHMENT: 'file:pickAttachment',
   FILE_READ_ATTACHMENT: 'file:readAttachment',
 
+  // Installer
+  INSTALLER_READ_CONFIG: 'installer:readConfig',
+  INSTALLER_CLEAR_CONFIG: 'installer:clearConfig',
+
   // Auth
   AUTH_CHECK_SETUP: 'auth:checkSetup',
   AUTH_LOGIN: 'auth:login',

@@ -24,8 +24,17 @@ export const fileApi = {
   open: (filePath: string): Promise<boolean> => ipcRenderer.invoke(IpcChannels.FILE_OPEN, filePath),
 
   readAttachment: (filePath: string): Promise<string | null> =>
-    ipcRenderer.invoke(IpcChannels.FILE_READ_ATTACHMENT, filePath)
+    ipcRenderer.invoke(IpcChannels.FILE_READ_ATTACHMENT, filePath),
+}
+
+export const installerApi = {
+  readConfig: <T = { dataPath: string; username: string; password: string; storeName: string }>(): Promise<T | null> =>
+    ipcRenderer.invoke(IpcChannels.INSTALLER_READ_CONFIG),
+
+  clearConfig: (): Promise<void> =>
+    ipcRenderer.invoke(IpcChannels.INSTALLER_CLEAR_CONFIG),
 }
 
 export type SettingsApi = typeof settingsApi
 export type FileApi = typeof fileApi
+export type InstallerApi = typeof installerApi

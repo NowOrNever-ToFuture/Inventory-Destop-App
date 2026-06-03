@@ -1,7 +1,7 @@
 import type { IpcMain } from 'electron'
 import type { Database } from 'better-sqlite3'
 import { dialog, shell } from 'electron'
-import { copyFileSync, existsSync, readFileSync } from 'node:fs'
+import { copyFileSync, existsSync, readFileSync, unlinkSync } from 'node:fs'
 import { join, extname } from 'node:path'
 import { IpcChannels } from '@shared/contracts/ipc-channels'
 import type { AppSettingsDto, AppSettingUpdateDto } from '@shared/types/dtos/settings.dto'
@@ -86,5 +86,32 @@ export function registerSettingsHandlers(ipcMain: IpcMain, db: Database): void {
     } catch {
       return null
     }
+  })
+
+  // Read installer config (created by post-install.ps1)
+  ipcMain.handle(IpcChannels.INSTALLER_READ_CONFIG, <T>(): T | null => {
+    try {
+      // config is at app root: <installdir>\installer-config.json
+      const appRoot = process.resourcesPath
+        ? join(process.resourcesPath, '..')
+        : __dirname
+      const configPath = join(appRoot, 'installer-config.json')
+      if (!existsSync(configPath)) return null
+      const raw = readFileSync(configPath, 'utf-8')
+      return JSON.parse(raw) as T
+    } catch {
+      return null
+    }
+  })
+
+  // Clear installer config after app uses it
+  ipcMain.handle(IpcChannels.INSTALLER_CLEAR_CONFIG, (): void => {
+    try {
+      const appRoot = process.resourcesPath
+        ? join(process.resourcesPath, '..')
+        : __dirname
+      const configPath = join(appRoot, 'installer-config.json')
+      if (existsSync(configPath)) unlinkSync(configPath)
+    } catch { /* ignore */ }
   })
 }

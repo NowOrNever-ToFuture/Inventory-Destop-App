@@ -8,6 +8,7 @@ import type { PurchaseOrderApi } from './api/purchase-order.api'
 import type { SalesOrderApi } from './api/sales-order.api'
 import type { ExportApi } from './api/export.api'
 import type { SettingsApi, FileApi } from './api/settings.api'
+import type { InstallerApi } from './api/settings.api'
 import type { AuthApi } from './api/auth.api'
 
 interface DesktopApi {
@@ -22,6 +23,7 @@ interface DesktopApi {
   settings: SettingsApi
   file: FileApi
   auth: AuthApi
+  installer: InstallerApi
 }
 
 declare global {

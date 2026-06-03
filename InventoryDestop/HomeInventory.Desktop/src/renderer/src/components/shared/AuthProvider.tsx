@@ -27,6 +27,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshSetup = useCallback(async () => {
     setState((s) => ({ ...s, checkingSetup: true }))
     try {
+      // Check if installer left a config (from NSIS installer)
+      const installerConfig = await window.api.installer.readConfig<{ dataPath: string; username: string; password: string; storeName: string; setupComplete: boolean }>()
+      if (installerConfig?.setupComplete && installerConfig.username && installerConfig.password) {
+        // Auto-run setup from installer config
+        const result = await window.api.auth.setup(
+          installerConfig.username,
+          installerConfig.password,
+          installerConfig.storeName || 'HomeInventory',
+          installerConfig.dataPath || ''
+        )
+        if (result.success) {
+          await window.api.installer.clearConfig()
+        }
+      }
       const { setupComplete } = await window.api.auth.checkSetup()
       setState((s) => ({ ...s, setupComplete, checkingSetup: false }))
     } catch {

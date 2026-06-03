@@ -8,7 +8,7 @@ import { supplierApi } from './api/supplier.api'
 import { purchaseOrderApi } from './api/purchase-order.api'
 import { salesOrderApi } from './api/sales-order.api'
 import { exportApi } from './api/export.api'
-import { settingsApi, fileApi } from './api/settings.api'
+import { settingsApi, fileApi, installerApi } from './api/settings.api'
 import { authApi } from './api/auth.api'
 
 // Custom APIs for renderer
@@ -23,7 +23,8 @@ const api = {
   export: exportApi,
   settings: settingsApi,
   file: fileApi,
-  auth: authApi
+  auth: authApi,
+  installer: installerApi
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
