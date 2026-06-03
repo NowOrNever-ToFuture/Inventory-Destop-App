@@ -3,7 +3,7 @@ import { useAuth } from '@renderer/components/shared/AuthProvider'
 import { useToast } from '@renderer/components/shared/ToastProvider'
 import { reportAppError } from '@renderer/lib/app-error'
 
-const APP_ICON = '/icon_destop_app_1024x1024.png'
+const APP_ICON = './icon_destop_app_1024x1024.png'
 
 type Step = 'welcome' | 'database' | 'account' | 'store' | 'finish'
 

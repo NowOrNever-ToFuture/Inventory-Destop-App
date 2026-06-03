@@ -17,7 +17,7 @@ import type { AppSettingsDto } from '@shared/types/dtos/settings.dto'
 
 import { useAuth } from '@renderer/components/shared/AuthProvider'
 
-const APP_ICON = '/icon_destop_app_1024x1024.png'
+const APP_ICON = './icon_destop_app_1024x1024.png'
 
 interface SidebarItemProps {
   icon: React.ElementType
