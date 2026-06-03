@@ -10,13 +10,12 @@ import {
   Truck,
   BarChart3,
   RefreshCw,
-  Settings,
-  Bell
+  Settings
 } from 'lucide-react'
 import { cn } from '@renderer/lib/utils'
-import type { AppSettingsDto } from '@shared/types/dtos/settings.dto'
-
+import { Button } from '@renderer/components/ui/button'
 import { useAuth } from '@renderer/components/shared/AuthProvider'
+import type { AppSettingsDto } from '@shared/types/dtos/settings.dto'
 
 const APP_ICON = './icon_destop_app_1024x1024.png'
 
@@ -142,22 +141,13 @@ export function AppLayout() {
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 flex-shrink-0">
           <div />
           <div className="flex items-center gap-4">
-            <button
-              type="button"
-              className="text-gray-400 hover:text-blue-600 transition-colors"
+            <Button
+              variant="ghost"
+              size="icon"
+              icon={RefreshCw}
               title="Làm mới dữ liệu"
               onClick={() => window.location.reload()}
-            >
-              <RefreshCw size={18} />
-            </button>
-            <button
-              type="button"
-              className="text-gray-400 hover:text-gray-600 relative"
-              aria-label="Thông báo"
-            >
-              <Bell size={20} />
-              <span className="absolute top-0 right-0 size-2 bg-red-500 rounded-full border border-white"></span>
-            </button>
+            />
           </div>
         </header>
 
