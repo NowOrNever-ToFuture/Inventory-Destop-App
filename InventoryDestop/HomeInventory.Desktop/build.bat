@@ -87,14 +87,29 @@ echo.
 echo   [OK] Da chon: %OS_NAME%
 echo.
 
-:: ─── Build ────────────────────────────────────────────────
+:: ─── Build (bo qua typecheck, chi build source + package) ─
 echo [4/4] Dang build installer cho %OS_NAME%...
 echo --------------------------------
 echo.
 echo   Qua trinh nay co the mat vai phut, vui long cho...
 echo.
 
-call npm run %BUILD_CMD%
+if "%CHOICE%"=="1" (
+    call npx electron-vite build
+    if !errorlevel! equ 0 (
+        call npx electron-builder --win
+    )
+) else if "%CHOICE%"=="2" (
+    call npx electron-vite build
+    if !errorlevel! equ 0 (
+        call npx electron-builder --mac
+    )
+) else if "%CHOICE%"=="3" (
+    call npx electron-vite build
+    if !errorlevel! equ 0 (
+        call npx electron-builder --linux
+    )
+)
 if %errorlevel% neq 0 (
     echo.
     echo   [!] Build that bai. Kiem tra loi o tren.
